@@ -11,6 +11,8 @@ import MobileCoreServices
 
 class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
+    @IBOutlet weak var contentViewHeight: NSLayoutConstraint!
+    
     var titleText = String()
     var mediaType = String()
     var mediaURL = NSURL()
@@ -18,6 +20,11 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationItem.title = titleText
+    }
+    
+    override func viewDidLayoutSubviews() {
+        var screenSize: CGSize = UIScreen.mainScreen().bounds.size as CGSize
+        contentViewHeight.constant = screenSize.width + 438
     }
     
     func showCamera() {
@@ -32,7 +39,6 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
             } else if mediaType == "video" {
                 camera.mediaTypes = [kUTTypeMovie]
             }
-            
             self.presentViewController(camera, animated: true, completion: nil)
         }
     }
@@ -42,10 +48,11 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
     }
     
     @IBAction func cancelButtonPressed(sender: UIBarButtonItem) {
+        self.navigationController?.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
         dismissViewControllerAnimated(true, completion: nil)
     }
 
-    @IBAction func addButtonPressed(sender: UIBarButtonItem) {
+    @IBAction func captureButtonPressed(sender: UIButton) {
         if mediaType == "recording" {
             // Show Recorder
         } else {
