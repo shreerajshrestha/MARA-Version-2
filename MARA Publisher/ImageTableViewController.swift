@@ -7,8 +7,15 @@
 //
 
 import UIKit
+import Foundation
+import CoreData
 
-class ImageTableViewController: UITableViewController {
+class ImageTableViewController: UITableViewController, NSFetchedResultsControllerDelegate {
+    
+    var mediadetails: NSMutableArray?
+    
+    let managedObjectContext = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext
+    var fetchedResultsController: NSFetchedResultsController?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -18,6 +25,15 @@ class ImageTableViewController: UITableViewController {
 
         // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
         // self.navigationItem.rightBarButtonItem = self.editButtonItem()
+        
+        let fetchRequest = NSFetchRequest(entityName: "ImageDB")
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.managedObjectContext!, sectionNameKeyPath: nil, cacheName: nil)
+        fetchedResultsController?.delegate = self
+        var error: NSError?
+        fetchedResultsController?.performFetch(&error)
+        if let err = error {
+            println("fetchRequestController  perform fetch error:\(err.localizedDescription)")
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -88,7 +104,6 @@ class ImageTableViewController: UITableViewController {
     // MARK: - Navigation
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         let destinationVC = segue.destinationViewController.topViewController as! AddMediaViewController
-        destinationVC.titleText = "Add Image"
         destinationVC.mediaType = "image"
     }
 

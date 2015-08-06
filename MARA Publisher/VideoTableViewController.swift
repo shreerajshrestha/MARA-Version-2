@@ -87,7 +87,6 @@ class VideoTableViewController: UITableViewController {
     // MARK: - Navigation
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         let destinationVC = segue.destinationViewController.topViewController as! AddMediaViewController
-        destinationVC.titleText = "Add Video"
         destinationVC.mediaType = "video"
     }
 

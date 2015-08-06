@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreData
 
 class RecordingTableViewController: UITableViewController {
 
@@ -15,7 +16,7 @@ class RecordingTableViewController: UITableViewController {
 
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
-
+        
         // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
         // self.navigationItem.rightBarButtonItem = self.editButtonItem()
     }
@@ -87,7 +88,6 @@ class RecordingTableViewController: UITableViewController {
     // MARK: - Navigation
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         let destinationVC = segue.destinationViewController.topViewController as! AddMediaViewController
-        destinationVC.titleText = "Add Recording"
         destinationVC.mediaType = "recording"
     }
 

@@ -7,12 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		040E0DE91B71BBF60024A24B /* FDWaveFormView.m in Sources */ = {isa = PBXBuildFile; fileRef = 040E0DE81B71BBF60024A24B /* FDWaveFormView.m */; };
 		04125F151B69A77C007CDD82 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04125F141B69A77C007CDD82 /* AVKit.framework */; };
+		04125F171B69C30E007CDD82 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04125F161B69C30E007CDD82 /* MediaPlayer.framework */; };
+		04239A931B72945900BB5294 /* ImageDB.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04239A921B72945900BB5294 /* ImageDB.swift */; };
+		04239A951B72945A00BB5294 /* VideoDB.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04239A941B72945A00BB5294 /* VideoDB.swift */; };
+		04239A971B72945A00BB5294 /* RecordingDB.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04239A961B72945A00BB5294 /* RecordingDB.swift */; };
+		042E3B9C1B708E9400087EBA /* RecorderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042E3B9B1B708E9400087EBA /* RecorderViewController.swift */; };
+		042F03421B71949F003180C3 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 042F03411B71949F003180C3 /* LaunchScreen.xib */; };
 		0461CA671B68466D00A3C8B1 /* mara.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 0461CA651B68466C00A3C8B1 /* mara.xcdatamodeld */; };
 		04ADFF821B6603C90044A6D3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04ADFF811B6603C90044A6D3 /* AppDelegate.swift */; };
 		04ADFF891B6603C90044A6D3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 04ADFF871B6603C90044A6D3 /* Main.storyboard */; };
 		04ADFF8B1B6603CA0044A6D3 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 04ADFF8A1B6603C90044A6D3 /* Images.xcassets */; };
-		04ADFF8E1B6603CA0044A6D3 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 04ADFF8C1B6603CA0044A6D3 /* LaunchScreen.xib */; };
 		04ADFF9A1B6603CA0044A6D3 /* MARA_PublisherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04ADFF991B6603CA0044A6D3 /* MARA_PublisherTests.swift */; };
 		04ADFFA71B6604560044A6D3 /* AddMediaViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04ADFFA31B6604560044A6D3 /* AddMediaViewController.swift */; };
 		04ADFFA81B6604560044A6D3 /* ImageTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04ADFFA41B6604560044A6D3 /* ImageTableViewController.swift */; };
@@ -31,14 +37,22 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		040E0DE71B71BBF50024A24B /* MARA Publisher-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MARA Publisher-Bridging-Header.h"; sourceTree = "<group>"; };
+		040E0DE81B71BBF60024A24B /* FDWaveFormView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FDWaveFormView.m; sourceTree = "<group>"; };
+		040E0DEA1B71BD1D0024A24B /* FDWaveFormView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FDWaveFormView.h; sourceTree = "<group>"; };
 		04125F141B69A77C007CDD82 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
+		04125F161B69C30E007CDD82 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
+		04239A921B72945900BB5294 /* ImageDB.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageDB.swift; sourceTree = "<group>"; };
+		04239A941B72945A00BB5294 /* VideoDB.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoDB.swift; sourceTree = "<group>"; };
+		04239A961B72945A00BB5294 /* RecordingDB.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecordingDB.swift; sourceTree = "<group>"; };
+		042E3B9B1B708E9400087EBA /* RecorderViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecorderViewController.swift; sourceTree = "<group>"; };
+		042F03411B71949F003180C3 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		0461CA661B68466C00A3C8B1 /* mara.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = mara.xcdatamodel; sourceTree = "<group>"; };
 		04ADFF7C1B6603C90044A6D3 /* MARA Publisher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MARA Publisher.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		04ADFF801B6603C90044A6D3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		04ADFF811B6603C90044A6D3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		04ADFF881B6603C90044A6D3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		04ADFF8A1B6603C90044A6D3 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		04ADFF8D1B6603CA0044A6D3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
 		04ADFF931B6603CA0044A6D3 /* MARA PublisherTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MARA PublisherTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		04ADFF981B6603CA0044A6D3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		04ADFF991B6603CA0044A6D3 /* MARA_PublisherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MARA_PublisherTests.swift; sourceTree = "<group>"; };
@@ -53,6 +67,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				04125F171B69C30E007CDD82 /* MediaPlayer.framework in Frameworks */,
 				04125F151B69A77C007CDD82 /* AVKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -70,10 +85,17 @@
 		04ADFF731B6603C90044A6D3 = {
 			isa = PBXGroup;
 			children = (
+				04239A961B72945A00BB5294 /* RecordingDB.swift */,
+				04239A941B72945A00BB5294 /* VideoDB.swift */,
+				04239A921B72945900BB5294 /* ImageDB.swift */,
+				040E0DE81B71BBF60024A24B /* FDWaveFormView.m */,
+				040E0DEA1B71BD1D0024A24B /* FDWaveFormView.h */,
+				04125F161B69C30E007CDD82 /* MediaPlayer.framework */,
 				04125F141B69A77C007CDD82 /* AVKit.framework */,
 				04ADFF7E1B6603C90044A6D3 /* MARA Publisher */,
 				04ADFF961B6603CA0044A6D3 /* MARA PublisherTests */,
 				04ADFF7D1B6603C90044A6D3 /* Products */,
+				040E0DE71B71BBF50024A24B /* MARA Publisher-Bridging-Header.h */,
 			);
 			sourceTree = "<group>";
 		};
@@ -95,8 +117,9 @@
 				04ADFFA61B6604560044A6D3 /* VideoTableViewController.swift */,
 				04ADFF811B6603C90044A6D3 /* AppDelegate.swift */,
 				04ADFF871B6603C90044A6D3 /* Main.storyboard */,
+				042E3B9B1B708E9400087EBA /* RecorderViewController.swift */,
 				04ADFF8A1B6603C90044A6D3 /* Images.xcassets */,
-				04ADFF8C1B6603CA0044A6D3 /* LaunchScreen.xib */,
+				042F03411B71949F003180C3 /* LaunchScreen.xib */,
 				0461CA651B68466C00A3C8B1 /* mara.xcdatamodeld */,
 				04ADFF7F1B6603C90044A6D3 /* Supporting Files */,
 			);
@@ -177,6 +200,7 @@
 				TargetAttributes = {
 					04ADFF7B1B6603C90044A6D3 = {
 						CreatedOnToolsVersion = 6.4;
+						DevelopmentTeam = A6ND6T3LNM;
 					};
 					04ADFF921B6603CA0044A6D3 = {
 						CreatedOnToolsVersion = 6.4;
@@ -209,7 +233,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				04ADFF891B6603C90044A6D3 /* Main.storyboard in Resources */,
-				04ADFF8E1B6603CA0044A6D3 /* LaunchScreen.xib in Resources */,
+				042F03421B71949F003180C3 /* LaunchScreen.xib in Resources */,
 				04ADFF8B1B6603CA0044A6D3 /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -231,9 +255,14 @@
 				04ADFF821B6603C90044A6D3 /* AppDelegate.swift in Sources */,
 				04ADFFA91B6604560044A6D3 /* RecordingTableViewController.swift in Sources */,
 				0461CA671B68466D00A3C8B1 /* mara.xcdatamodeld in Sources */,
+				042E3B9C1B708E9400087EBA /* RecorderViewController.swift in Sources */,
 				04ADFFAA1B6604560044A6D3 /* VideoTableViewController.swift in Sources */,
 				04ADFFA81B6604560044A6D3 /* ImageTableViewController.swift in Sources */,
+				04239A971B72945A00BB5294 /* RecordingDB.swift in Sources */,
 				04ADFFA71B6604560044A6D3 /* AddMediaViewController.swift in Sources */,
+				040E0DE91B71BBF60024A24B /* FDWaveFormView.m in Sources */,
+				04239A931B72945900BB5294 /* ImageDB.swift in Sources */,
+				04239A951B72945A00BB5294 /* VideoDB.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -262,14 +291,6 @@
 				04ADFF881B6603C90044A6D3 /* Base */,
 			);
 			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-		04ADFF8C1B6603CA0044A6D3 /* LaunchScreen.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				04ADFF8D1B6603CA0044A6D3 /* Base */,
-			);
-			name = LaunchScreen.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -362,10 +383,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = "MARA Publisher/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "MARA Publisher-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
@@ -373,10 +398,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = "MARA Publisher/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "MARA Publisher-Bridging-Header.h";
 			};
 			name = Release;
 		};
