@@ -7,63 +7,114 @@
 //
 
 import UIKit
-import Foundation
 import CoreData
 
-class ImageTableViewController: UITableViewController, NSFetchedResultsControllerDelegate {
+class ImageTableViewController: UITableViewController, NSFetchedResultsControllerDelegate, UISearchBarDelegate, UISearchResultsUpdating {
     
-    var mediadetails: NSMutableArray?
+    private let managedObjectContext = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext
+    private var searchResults = [ImageDB]()
+    private var searchController = UISearchController()
     
-    let managedObjectContext = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext
-    var fetchedResultsController: NSFetchedResultsController?
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem()
-        
+    private lazy var fetchedResultsController: NSFetchedResultsController = {
         let fetchRequest = NSFetchRequest(entityName: "ImageDB")
-        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.managedObjectContext!, sectionNameKeyPath: nil, cacheName: nil)
-        fetchedResultsController?.delegate = self
-        var error: NSError?
-        fetchedResultsController?.performFetch(&error)
-        if let err = error {
-            println("fetchRequestController  perform fetch error:\(err.localizedDescription)")
-        }
+        let primarySortDescriptor = NSSortDescriptor(key: "name", ascending: true)
+        fetchRequest.sortDescriptors = [primarySortDescriptor]
+        let frc = NSFetchedResultsController(
+            fetchRequest: fetchRequest,
+            managedObjectContext: self.managedObjectContext!,
+            sectionNameKeyPath: nil,
+            cacheName: nil)
+        frc.delegate = self
+        return frc
+        }()
+    
+    override func viewDidLoad() {
+        self.searchController = ({
+            let controller = UISearchController(searchResultsController: nil)
+            controller.searchResultsUpdater = self
+            controller.dimsBackgroundDuringPresentation = false
+            controller.searchBar.sizeToFit()
+            controller.searchBar.scopeButtonTitles = ["name","tags"]
+            controller.searchBar.delegate = self
+            self.tableView.tableHeaderView = controller.searchBar
+            self.definesPresentationContext = true;
+            return controller
+        })()
+        self.tableView.reloadData()
     }
-
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        var error: NSError? = nil
+        if (fetchedResultsController.performFetch(&error) == false) {
+            print("fetchedResultsController performFetch error: \(error?.localizedDescription)")
+        }
+        self.tableView.reloadData()
+    }
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
 
+    @IBAction func helpButtonClicked(sender: UIButton) {
+        let supportNC = self.storyboard?.instantiateViewControllerWithIdentifier("supportNC") as! UIViewController
+        supportNC.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
+        self.presentViewController(supportNC, animated: true, completion: nil)
+    }
+    
+    @IBAction func settingsButtonClicked(sender: UIBarButtonItem) {
+        let settingsNC = self.storyboard?.instantiateViewControllerWithIdentifier("settingsNC") as! UIViewController
+        settingsNC.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
+        self.presentViewController(settingsNC, animated: true, completion: nil)
+    }
+    
     // MARK: - Table view data source
-
+    
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
-        // #warning Potentially incomplete method implementation.
-        // Return the number of sections.
+        if let sections = fetchedResultsController.sections {
+            return sections.count
+        }
         return 0
     }
-
+    
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete method implementation.
-        // Return the number of rows in the section.
+        if (self.searchController.active) {
+            return self.searchResults.count
+        }
+        else if let sections = fetchedResultsController.sections {
+            let currentSection = sections[section] as! NSFetchedResultsSectionInfo
+            return currentSection.numberOfObjects
+        }
         return 0
     }
-
-    /*
+    
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("reuseIdentifier", forIndexPath: indexPath) as! UITableViewCell
-
-        // Configure the cell...
-
+        let cell = self.tableView.dequeueReusableCellWithIdentifier("cell", forIndexPath: indexPath) as! UITableViewCell
+        
+        var media: ImageDB?
+        if (self.searchController.active) {
+            media = searchResults[indexPath.row]
+        }
+        else {
+            media = fetchedResultsController.objectAtIndexPath(indexPath) as? ImageDB
+        }
+        
+        let nameLabel = cell.viewWithTag(1) as! UILabel
+        let tagsLabel = cell.viewWithTag(2) as! UILabel
+        
+        let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true) as NSArray
+        let documentsDirectory = paths.objectAtIndex(0) as! NSString
+        let preview = cell.viewWithTag(3) as! UIImageView
+        let pathComponents = NSArray(objects: documentsDirectory, "/Images/", media!.fileName)
+        let imagePath = NSURL.fileURLWithPathComponents(pathComponents as [AnyObject])!.path
+        
+        nameLabel.text = media!.name
+        tagsLabel.text = media!.tags
+        preview.image = UIImage(contentsOfFile: imagePath!)
+        
         return cell
     }
-    */
 
     /*
     // Override to support conditional editing of the table view.
@@ -102,9 +153,59 @@ class ImageTableViewController: UITableViewController, NSFetchedResultsControlle
 
     
     // MARK: - Navigation
+    
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        let destinationVC = segue.destinationViewController.topViewController as! AddMediaViewController
-        destinationVC.mediaType = "image"
+        
+        var media: NSManagedObject?
+        if let cell = sender as? UITableViewCell {
+            
+            let indexPath = self.tableView.indexPathForSelectedRow()
+            if (self.searchController.active) {
+                media = searchResults[indexPath!.row]
+            }
+            else {
+                media = fetchedResultsController.objectAtIndexPath(indexPath!) as? NSManagedObject
+            }
+        }
+        
+        switch segue.identifier! {
+        case "toDetailView":
+            let destinationVC = segue.destinationViewController.topViewController as! DetailViewController
+            destinationVC.navigationController?.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
+            destinationVC.mediaType = "image"
+            destinationVC.mediaObject = media
+            self.searchController.active = false
+        default:
+            let destinationVC = segue.destinationViewController.topViewController as! AddMediaViewController
+            destinationVC.navigationController?.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
+            destinationVC.mediaType = "image"
+        }
+    }
+    
+    // MARK: - UISearchResultsUpdating
+    
+    func updateSearchResultsForSearchController(searchController: UISearchController)
+    {
+        var scope = NSString()
+        switch self.searchController.searchBar.selectedScopeButtonIndex {
+        case 0:
+            scope = "name"
+        default:
+            scope = "tags"
+        }
+        let fetchRequest = NSFetchRequest(entityName: "ImageDB")
+        let sortDescriptor = NSSortDescriptor(key: scope as String, ascending: true)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        let predicate = NSPredicate(format: "%K contains[cd] %@", scope, self.searchController.searchBar.text)
+        fetchRequest.predicate = predicate
+        if let fetchResults = managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [ImageDB] {
+            searchResults = fetchResults
+        }
+        self.tableView.reloadData()
+    }
+    
+    func searchBar(searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
+        self.updateSearchResultsForSearchController(self.searchController)
     }
 
 }

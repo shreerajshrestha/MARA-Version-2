@@ -13,40 +13,77 @@ import CoreLocation
 import AVFoundation
 import AVKit
 import CoreData
+import MapKit
 
-class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, CLLocationManagerDelegate, AVAudioPlayerDelegate, RecorderDelegate, FDWaveformViewDelegate {
+class AddMediaViewController: UIViewController, UINavigationControllerDelegate, UIImagePickerControllerDelegate,  CLLocationManagerDelegate, AVAudioPlayerDelegate, MKMapViewDelegate, RecorderDelegate, FDWaveformViewDelegate {
     
+    @IBOutlet weak var mapView: MKMapView!
+    @IBOutlet weak var tagListView: TagListView!
+    @IBOutlet weak var descriptionTextView: UITextView!
     @IBOutlet weak var imagePreview: UIImageView!
     @IBOutlet weak var videoContainer: UIView!
     @IBOutlet weak var waveform: FDWaveformView!
     @IBOutlet weak var waveformButton: UIButton!
-    @IBOutlet weak var saveAsTextField: UITextField!
-    @IBOutlet weak var tagsTextField: UITextField!
-    @IBOutlet weak var latitudeTextField: UITextField!
-    @IBOutlet weak var longitudeTextField: UITextField!
-    @IBOutlet weak var descriptionTextView: UITextView!
-    @IBOutlet weak var contentViewHeight: NSLayoutConstraint!
+    @IBOutlet weak var titleLabel: UILabel!
+    @IBOutlet weak var saveButton: UIBarButtonItem!
+    @IBOutlet weak var captureButton: UIButton!
     
-    var audioPlayer: AVAudioPlayer?
-    var timer: NSTimer?
-    var tempURL: NSURL?
-    var fileURL: NSURL?
+    internal var mediaType = String()
     
-    var mediaType = String()
-    var tempPath = String()
-    var documentsFolder = String()
-    var fileManager = NSFileManager()
-    var camera = UIImagePickerController()
-    var locationManager = CLLocationManager()
-    var latitude = Double()
-    var longitude = Double()
+    private var audioPlayer: AVAudioPlayer?
+    private var timer: NSTimer?
+    private var tempURL: NSURL?
+    private var fileURL: NSURL?
     
-    let managedObjectContext = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext
+    private var name = String()
+    private var tags = String()
+    private var descriptor = String()
+    private var latitude = Double()
+    private var longitude = Double()
+    private var tempPath = String()
+    private var documentsFolder = String()
+    private var camera = UIImagePickerController()
+    private var fileManager = NSFileManager()
+    private var locationManager = CLLocationManager()
+    private var inputType = String()
+    
+    private let managedObjectContext = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext
+    private let textInputBar = ALTextInputBar()
+    private let keyboardObserver = ALKeyboardObservingView()
+    
+    override var inputAccessoryView: UIView? {
+        get {
+            return keyboardObserver
+        }
+    }
+    
+    override func canBecomeFirstResponder() -> Bool {
+        return true
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         camera.delegate = self
         locationManager.delegate = self
+        
+        let location = CLLocation(latitude: latitude, longitude: longitude)
+        let span = MKCoordinateSpanMake(0.10, 0.10)
+        let region = MKCoordinateRegion(center: location.coordinate, span: span)
+        let pin = MKPointAnnotation()
+        pin.coordinate = location.coordinate
+        pin.title = name
+        pin.subtitle = tags
+        
+        mapView.mapType = MKMapType.Standard
+        mapView.zoomEnabled = false
+        mapView.scrollEnabled = false
+        mapView.pitchEnabled = false
+        mapView.rotateEnabled = true
+        mapView.centerCoordinate = location.coordinate
+        mapView.addAnnotation(pin)
+        mapView.delegate = self
+        mapView.setRegion(region, animated: true)
         
         let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true) as NSArray
         let documentsDirectory = paths.objectAtIndex(0) as! NSString
@@ -57,49 +94,175 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
             imagePreview.userInteractionEnabled = true
             tempPath = NSTemporaryDirectory().stringByAppendingString("temp.jpg")
             documentsFolder = documentsDirectory.stringByAppendingString("/Images/")
+            captureButton.setImage(UIImage(named: "imageNav"), forState: UIControlState.Normal)
         case "video":
             videoContainer.hidden = false
             videoContainer.userInteractionEnabled = true
             tempPath = NSTemporaryDirectory().stringByAppendingString("temp.mp4")
             documentsFolder = documentsDirectory.stringByAppendingString("/Videos/")
+            captureButton.setImage(UIImage(named: "videoNav"), forState: UIControlState.Normal)
         case "recording":
             waveform.hidden = false
+            waveform.userInteractionEnabled = true
+            waveformButton.hidden = false
             tempPath = NSTemporaryDirectory().stringByAppendingString("temp.m4a")
             documentsFolder = documentsDirectory.stringByAppendingString("/Recordings/")
+            captureButton.setImage(UIImage(named: "recordingNav"), forState: UIControlState.Normal)
         default:
             videoContainer.hidden = true
             imagePreview.hidden = true
             waveform.hidden = true
+            waveformButton.hidden = true
         }
         
         var error: NSError?
         if !fileManager.fileExistsAtPath(documentsFolder as String) {
             fileManager.createDirectoryAtPath(documentsFolder as String, withIntermediateDirectories: false, attributes: nil, error: &error)
         }
-        
         if let err = error {
             println("fileManager error: \(err.localizedDescription)")
         }
-        
         tempURL = NSURL.fileURLWithPath(tempPath)
         
+        configureInputBar()
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardFrameChanged:", name: ALKeyboardFrameDidChangeNotification, object: nil)
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardWillShow:", name: UIKeyboardWillShowNotification, object: nil)
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardWillHide:", name: UIKeyboardWillHideNotification, object: nil)
+        
+        tagListView.textFont = UIFont.systemFontOfSize(11)
+        tagListView.addTag("tag1")
+        tagListView.addTag("tag2")
+        tagListView.addTag("tag3")
+        saveButton.enabled = false
+        
+        switch CLLocationManager.authorizationStatus() {
+        case .NotDetermined:
+            locationManager.requestWhenInUseAuthorization()
+            locationManager.distanceFilter = kCLDistanceFilterNone
+            locationManager.desiredAccuracy = kCLLocationAccuracyBest
+            locationManager.requestWhenInUseAuthorization()
+            locationManager.startUpdatingLocation()
+        case .Restricted, .Denied:
+            let alert = UIAlertController(title: "Location Access Disabled!",
+                message: "Location data is required to save metadata for the media. Please open settings and set the location access to \n'While Using the App'.",
+                preferredStyle: UIAlertControllerStyle.Alert)
+            let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.Cancel, handler: nil)
+            let openSettingsAction = UIAlertAction(title: "Open Settings", style: .Default) { (action) in
+                if let url = NSURL(string:UIApplicationOpenSettingsURLString) {
+                    UIApplication.sharedApplication().openURL(url)
+                }
+            }
+            alert.addAction(cancelAction)
+            alert.addAction(openSettingsAction)
+            self.presentViewController(alert, animated: true, completion: nil)
+        default:
+            locationManager.distanceFilter = kCLDistanceFilterNone
+            locationManager.desiredAccuracy = kCLLocationAccuracyBest
+            locationManager.requestWhenInUseAuthorization()
+            locationManager.startUpdatingLocation()
+        }
+        
+        self.timer = NSTimer.scheduledTimerWithTimeInterval(2, target: self, selector: "flicker", userInfo: self.captureButton, repeats: true)
+    }
+    
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        textInputBar.frame.size.width = view.bounds.size.width
     }
     
     override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
         var screenSize: CGSize = UIScreen.mainScreen().bounds.size as CGSize
-        contentViewHeight.constant = screenSize.width*3/4.0 + 425
     }
     
-    deinit {
-        NSNotificationCenter.defaultCenter().removeObserver(self)
+    func configureInputBar() {
+        let rightButton = UIButton(frame: CGRectMake(0, 0, 44, 44))
+        rightButton.addTarget(self, action: "typeButtonPressed:", forControlEvents: UIControlEvents.TouchUpInside)
+        rightButton.setImage(UIImage(named: "textInput"), forState: UIControlState.Normal)
+        keyboardObserver.userInteractionEnabled = false
+        textInputBar.leftView = nil
+        textInputBar.rightView = rightButton
+        textInputBar.frame = CGRectMake(0, view.frame.size.height - textInputBar.defaultHeight, view.frame.size.width, textInputBar.defaultHeight)
+        textInputBar.horizontalPadding = 10
+        textInputBar.backgroundColor = UIColor.groupTableViewBackgroundColor()
+        textInputBar.keyboardObserver = keyboardObserver
+        textInputBar.textView.keyboardType = UIKeyboardType.ASCIICapable
+        textInputBar.textView.autocapitalizationType = UITextAutocapitalizationType.Sentences
+    }
+    
+    func keyboardFrameChanged(notification: NSNotification) {
+        if let userInfo = notification.userInfo {
+            let frame = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue()
+            textInputBar.frame.origin.y = frame.origin.y
+        }
     }
     
     func keyboardWillShow(notification: NSNotification) {
+        if let userInfo = notification.userInfo {
+            let frame = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue()
+            textInputBar.frame.origin.y = frame.origin.y
+        }
     }
     
     func keyboardWillHide(notification: NSNotification) {
+        if let userInfo = notification.userInfo {
+            let frame = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue()
+            textInputBar.frame.origin.y = frame.origin.y
+        }
+    }
+    
+    func flicker() {
+        let button = self.timer?.userInfo as! UIButton
+        button.alpha = 0.0
+        UIView.animateWithDuration(0.12, delay:0.0, options: .CurveEaseIn | .Autoreverse | .AllowUserInteraction, animations: {
+            button.alpha = 1.0
+        }, completion: nil)
+    }
+    
+    func typeButtonPressed(sender:UIButton!) {
+        
+        switch inputType {
+            
+        case "tags":
+            tags = textInputBar.text
+            let tagsArray = tags.componentsSeparatedByString(",")
+            tagListView.removeAllTags()
+            for tag in tagsArray {
+                tagListView.addTag(tag)
+            }
+            textInputBar.textView.placeholder = "Enter the description text..."
+            textInputBar.text = ""
+            inputType = "description"
+            
+            let pin = MKPointAnnotation()
+            let location = CLLocation(latitude: latitude, longitude: longitude)
+            pin.coordinate = location.coordinate
+            pin.title = name
+            pin.subtitle = tags
+            mapView.addAnnotation(pin)
+            
+        case "description":
+            descriptor = textInputBar.text
+            descriptionTextView.selectable = true
+            descriptionTextView.text = descriptor
+            descriptionTextView.selectable = false
+            inputType = "complete"
+            
+        default:
+            name = textInputBar.text
+            titleLabel.text = name
+            textInputBar.textView.placeholder = "Enter tags separated by commas..."
+            textInputBar.text = ""
+            inputType = "tags"
+        }
+        
+        if inputType == "complete" {
+            textInputBar.textView.userInteractionEnabled = false
+            textInputBar.textView.resignFirstResponder()
+            textInputBar.hidden = true
+        }
+        
+        textInputBar.text = ""
     }
     
     func showCamera() {
@@ -133,7 +296,7 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
     func updateWaveform() {
         UIView.animateWithDuration(0.001, animations: {
             let currentPlayTime = self.audioPlayer?.currentTime
-            let progressSample = UInt((currentPlayTime! + 0.065) * 44100.00)
+            let progressSample = UInt((currentPlayTime! + 0.01) * 44100.00)
             self.waveform.progressSamples = progressSample
         })
     }
@@ -144,36 +307,44 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
     }
     
     func validateInputFields() -> Bool {
-        if saveAsTextField.text == "" {
+        if name == "" {
             return false
         }
-        if tagsTextField.text == "" {
+        if tags == "" {
             return false
         }
-        if descriptionTextView.text == "" {
+        if descriptor == "" {
             return false
         }
-        if latitudeTextField.text == "" || longitudeTextField.text == "" {
+        if latitude == 0 || longitude == 0 {
             return false
         }
         return fileManager.fileExistsAtPath(tempPath)
     }
     
     @IBAction func cancelButtonPressed(sender: UIBarButtonItem) {
-        let alert = UIAlertController(title: "Cancel Save?", message: "Any captured media and input fields will be cleared.", preferredStyle: UIAlertControllerStyle.Alert)
-        let noAction = UIAlertAction(title: "No", style: UIAlertActionStyle.Cancel, handler: nil)
-        let yesAction = UIAlertAction(title: "Yes", style: .Destructive) { (action) in
+        let alert = UIAlertController(title: "Are You Sure?", message: "Any captured media and input data will be cleared!", preferredStyle: UIAlertControllerStyle.Alert)
+        let stayAction = UIAlertAction(title: "Stay", style: UIAlertActionStyle.Cancel, handler: nil)
+        let backAction = UIAlertAction(title: "Leave", style: UIAlertActionStyle.Destructive) { (action) in
             self.navigationController?.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
+            self.textInputBar.textView.resignFirstResponder()
             self.dismissViewControllerAnimated(true, completion: nil)
         }
-        alert.addAction(noAction)
-        alert.addAction(yesAction)
+        alert.addAction(stayAction)
+        alert.addAction(backAction)
         self.presentViewController(alert, animated: true, completion: nil)
     }
 
     @IBAction func captureButtonPressed(sender: UIButton) {
+        if self.timer?.valid == true {
+            let button = self.timer?.userInfo as! UIButton
+            if button == captureButton {
+                self.timer?.invalidate()
+            }
+        }
         if mediaType == "recording" {
             let recorderNC = self.storyboard?.instantiateViewControllerWithIdentifier("recorderNC") as! UINavigationController
+            recorderNC.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
             let recorderVC = recorderNC.viewControllers[0] as! RecorderViewController
             fileManager.removeItemAtPath(tempPath, error: nil)
             recorderVC.filePath = tempPath
@@ -185,55 +356,19 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
     }
     
     @IBAction func waveformButtonPressed(sender: UIButton) {
-        
         if audioPlayer?.playing == false {
-            waveformButton.setTitle("Pause", forState: UIControlState.Normal)
+            waveformButton.setImage(UIImage(named: "pause"), forState: UIControlState.Normal)
             self.timer = NSTimer.scheduledTimerWithTimeInterval(0.001, target: self, selector: "updateWaveform", userInfo: nil, repeats: true)
             audioPlayer?.play()
         }
         else {
-            waveformButton.setTitle("Play", forState: UIControlState.Normal)
+            waveformButton.setImage(UIImage(named: "play"), forState: UIControlState.Normal)
             audioPlayer?.pause()
-        }
-        
-    }
-    
-    @IBAction func getLocationButtonTapped(sender: UIButton) {
-        switch CLLocationManager.authorizationStatus() {
-            
-        case .NotDetermined:
-            locationManager.requestWhenInUseAuthorization()
-            locationManager.distanceFilter = kCLDistanceFilterNone
-            locationManager.desiredAccuracy = kCLLocationAccuracyBest
-            locationManager.requestWhenInUseAuthorization()
-            locationManager.startUpdatingLocation()
-            
-        case .Restricted, .Denied:
-            let alert = UIAlertController(title: "Location Access Disabled",
-                message: "Location data is required to save media. Please open settings for this app and set location access to \n'While Using the App'.",
-                preferredStyle: UIAlertControllerStyle.Alert)
-            let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.Cancel, handler: nil)
-            let openSettingsAction = UIAlertAction(title: "Open Settings", style: .Default) { (action) in
-                if let url = NSURL(string:UIApplicationOpenSettingsURLString) {
-                    UIApplication.sharedApplication().openURL(url)
-                }
-            }
-            alert.addAction(cancelAction)
-            alert.addAction(openSettingsAction)
-            self.presentViewController(alert, animated: true, completion: nil)
-            
-        default:
-            locationManager.distanceFilter = kCLDistanceFilterNone
-            locationManager.desiredAccuracy = kCLLocationAccuracyBest
-            locationManager.requestWhenInUseAuthorization()
-            locationManager.startUpdatingLocation()
         }
     }
     
     @IBAction func saveButtonTapped(sender: UIBarButtonItem) {
-        
         if validateInputFields() {
-            
             let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true) as NSArray
             let documentsDirectory = paths.objectAtIndex(0) as! NSString
             
@@ -245,13 +380,13 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
                 var pathComponents = NSArray()
                 switch mediaType {
                 case "image":
-                    fileName = NSString(format: "%@%d.jpg", saveAsTextField.text.stringByReplacingOccurrencesOfString(" ", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil), id) as! String
+                    fileName = NSString(format: "%@%d.jpg", name.stringByReplacingOccurrencesOfString(" ", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil), id) as! String
                     pathComponents = NSArray(objects: documentsDirectory, "/Images/", fileName)
                 case "video":
-                    fileName = NSString(format: "%@%d.mp4", saveAsTextField.text.stringByReplacingOccurrencesOfString(" ", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil), id) as! String
+                    fileName = NSString(format: "%@%d.mp4", name.stringByReplacingOccurrencesOfString(" ", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil), id) as! String
                     pathComponents = NSArray(objects: documentsDirectory, "/Videos/", fileName)
                 case "recording":
-                    fileName = NSString(format: "%@%d.m4a", saveAsTextField.text.stringByReplacingOccurrencesOfString(" ", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil), id) as! String
+                    fileName = NSString(format: "%@%d.m4a", name.stringByReplacingOccurrencesOfString(" ", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil), id) as! String
                     pathComponents = NSArray(objects: documentsDirectory, "/Recordings/", fileName)
                 default:
                     pathComponents = NSArray()
@@ -265,105 +400,64 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
                 println("fileManager error: \(err.localizedDescription)")
             }
             
-            
-            let now = NSDate()
             let formatter = NSDateFormatter()
-            formatter.setLocalizedDateFormatFromTemplate("MM/dd/yyyy HH:mm")
+            formatter.timeStyle = NSDateFormatterStyle.LongStyle
+            formatter.dateStyle = NSDateFormatterStyle.LongStyle
+            formatter.locale = NSLocale(localeIdentifier: "en_US")
+            let now = NSDate()
             let date = formatter.stringFromDate(now)
             
             switch mediaType {
             case "image":
                 let imageObject = NSEntityDescription.insertNewObjectForEntityForName("ImageDB", inManagedObjectContext: self.managedObjectContext!) as! ImageDB
-                imageObject.setValue(saveAsTextField.text as NSString, forKey: "name")
-                imageObject.setValue(tagsTextField.text, forKey: "tags")
-                imageObject.setValue(descriptionTextView.text, forKey: "descriptor")
-                imageObject.setValue(longitude, forKey: "longitude")
-                imageObject.setValue(latitude, forKey: "latitude")
-                imageObject.setValue(date, forKey: "date")
-                imageObject.setValue(fileName, forKey: "fileName")
+                imageObject.name = name
+                imageObject.tags = tags
+                imageObject.descriptor = descriptor
+                imageObject.longitude = longitude
+                imageObject.latitude = latitude
+                imageObject.date = date
+                imageObject.fileName = fileName as String
                 
             case "video":
                 let videoObject = NSEntityDescription.insertNewObjectForEntityForName("VideoDB", inManagedObjectContext: self.managedObjectContext!) as! VideoDB
-                videoObject.setValue(saveAsTextField.text as NSString, forKey: "name")
-                videoObject.setValue(tagsTextField.text, forKey: "tags")
-                videoObject.setValue(descriptionTextView.text, forKey: "descriptor")
-                videoObject.setValue(longitude, forKey: "longitude")
-                videoObject.setValue(latitude, forKey: "latitude")
-                videoObject.setValue(date, forKey: "date")
-                videoObject.setValue(fileName, forKey: "fileName")
+                videoObject.name = name
+                videoObject.tags = tags
+                videoObject.descriptor = descriptor
+                videoObject.longitude = longitude
+                videoObject.latitude = latitude
+                videoObject.date = date
+                videoObject.fileName = fileName as String
                 
             default:
                 let recordingObject = NSEntityDescription.insertNewObjectForEntityForName("RecordingDB", inManagedObjectContext: self.managedObjectContext!) as! RecordingDB
-                recordingObject.setValue(saveAsTextField.text as NSString, forKey: "name")
-                recordingObject.setValue(tagsTextField.text, forKey: "tags")
-                recordingObject.setValue(descriptionTextView.text, forKey: "descriptor")
-                recordingObject.setValue(longitude, forKey: "longitude")
-                recordingObject.setValue(latitude, forKey: "latitude")
-                recordingObject.setValue(date, forKey: "date")
-                recordingObject.setValue(fileName, forKey: "fileName")
+                recordingObject.name = name
+                recordingObject.tags = tags
+                recordingObject.descriptor = descriptor
+                recordingObject.longitude = longitude
+                recordingObject.latitude = latitude
+                recordingObject.date = date
+                recordingObject.fileName = fileName as String
             }
             
             self.managedObjectContext?.save(&error)
             if let err = error {
                 println("managedObjectContext error: \(err.localizedDescription)")
             } else {
-                let alert = UIAlertController(title: nil, message: "Successfully saved!", preferredStyle: UIAlertControllerStyle.Alert)
-                let okAction = UIAlertAction(title: "Ok", style: .Default) { (action) in
+                let alert = UIAlertController(title: "Successfully Saved!", message: "The media has been added to your library.", preferredStyle: UIAlertControllerStyle.Alert)
+                let okAction = UIAlertAction(title: "OK", style: .Default) { (action) in
                     self.navigationController?.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
                     self.dismissViewControllerAnimated(true, completion: nil)
                 }
                 alert.addAction(okAction)
-                self.presentViewController(alert, animated: false, completion: nil)
+                self.presentViewController(alert, animated: true, completion: nil)  
             }
         }
         else {
-            let alert = UIAlertController(title: nil, message: "Please input all fields, get location data and capture media before saving!", preferredStyle: UIAlertControllerStyle.Alert)
-            let okAction = UIAlertAction(title: "Ok", style: UIAlertActionStyle.Default, handler: nil)
+            let alert = UIAlertController(title: "Not Yet!", message: "Please input all required details in the text field below before saving!", preferredStyle: UIAlertControllerStyle.Alert)
+            let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil)
             alert.addAction(okAction)
             self.presentViewController(alert, animated: true, completion: nil)
         }
-        
-            
-            /*
-        var dataPath = NSString()
-            let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true) as NSArray
-            let documentsDirectory = paths.objectAtIndex(0) as! NSString
-            dataPath = documentsDirectory.stringByAppendingString("/Images")
-            dataPath = documentsDirectory.stringByAppendingString("/Videos")
-            dataPath = documentsDirectory.stringByAppendingString("/Recordings")
-            if fileManager.fileExistsAtPath(dataPath as String) {
-                fileManager.createDirectoryAtPath(dataPath as String, withIntermediateDirectories: false, attributes: nil, error: nil)
-            }
-            
-            var fileExists: Bool! = false
-            var fileName = NSString()
-            var fileURL = NSURL()
-            
-            do {
-                let id = arc4random() % 999999999
-                
-                let fileName = NSString(format: "%@%d.jpg", saveAsTextField.text.stringByReplacingOccurrencesOfString(" ", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil), id) as! String
-                
-                var pathComponents = NSArray()
-                switch mediaType {
-                case "image":
-                    pathComponents = NSArray(objects: documentsDirectory, "/Images/", fileName)
-                case "video":
-                    pathComponents = NSArray(objects: documentsDirectory, "/Videos/", fileName)
-                case "recording":
-                    pathComponents = NSArray(objects: documentsDirectory, "/Recordings/", fileName)
-                default:
-                    pathComponents = NSArray()
-                }
-                fileURL = NSURL.fileURLWithPathComponents(pathComponents as [AnyObject])!
-            } while fileExists == true
-
-            var error: NSError?
-            fileManager.copyItemAtURL(tempURL!, toURL: fileURL, error: &error)
-            if let err = error {
-                println("fileManager error: \(err.localizedDescription)")
-            }
-*/
     }
     
     /*
@@ -386,6 +480,13 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
             UIImageJPEGRepresentation(capturedImage, 1.0).writeToFile(tempPath, atomically: true)
             if let tempImage = UIImage(contentsOfFile: tempPath) {
                 imagePreview.image = tempImage
+                captureButton.enabled = false
+                saveButton.enabled = true
+                view.addSubview(textInputBar)
+                textInputBar.textView.placeholder = "Enter title for the media"
+                textInputBar.textView.userInteractionEnabled = true
+                textInputBar.textView.becomeFirstResponder()
+                locationManager.startUpdatingLocation()
             }
         case "video":
             var capturedVideoURL: NSURL = info[UIImagePickerControllerMediaURL] as! NSURL
@@ -395,6 +496,13 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
             let session = AVAudioSession.sharedInstance()
             session.setMode(AVAudioSessionModeMoviePlayback, error: nil)
             embededVC.player = AVPlayer(URL: tempURL)
+            captureButton.enabled = false
+            saveButton.enabled = true
+            view.addSubview(textInputBar)
+            textInputBar.textView.placeholder = "Enter title for the media"
+            textInputBar.textView.userInteractionEnabled = true
+            textInputBar.textView.becomeFirstResponder()
+            locationManager.startUpdatingLocation()
         default:
             dismissViewControllerAnimated(true, completion: nil)
         }
@@ -411,8 +519,8 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
     }
     
     func waveformViewDidRender(waveformView: FDWaveformView!) {
-        UIView.animateWithDuration(0.01, animations: {
-            self.waveform.alpha = 1.00
+        UIView.animateWithDuration(0.001, animations: {
+            self.waveform.alpha = 0.95
         })
     }
     
@@ -422,7 +530,7 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
         tempURL = NSURL(fileURLWithPath: tempPath)
         self.resetWaveform()
         self.generateWaveform()
-        self.waveformButton.hidden = false
+        self.waveformButton.enabled = true
         var error: NSError?
         var audioSession = AVAudioSession.sharedInstance()
         audioSession.setCategory(AVAudioSessionCategoryPlayback, error: nil)
@@ -432,12 +540,19 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
         if let err = error {
             println("audioPlayer error: \(err.localizedDescription)")
         }
+        captureButton.enabled = false
+        saveButton.enabled = true
+        view.addSubview(textInputBar)
+        textInputBar.textView.placeholder = "Enter title for the media"
+        textInputBar.textView.userInteractionEnabled = true
+        textInputBar.textView.becomeFirstResponder()
+        locationManager.startUpdatingLocation()
     }
     
     // MARK: - Audio Player
     func audioPlayerDidFinishPlaying(player: AVAudioPlayer!, successfully flag: Bool) {
         deactivateAudioSession()
-        waveformButton.setTitle("Play", forState: UIControlState.Normal)
+        waveformButton.setImage(UIImage(named: "play"), forState: UIControlState.Normal)
         self.resetWaveform()
     }
     
@@ -451,16 +566,21 @@ class AddMediaViewController: UIViewController, UIImagePickerControllerDelegate,
         if let location: CLLocation = locations.last as? CLLocation {
             latitude = location.coordinate.latitude
             longitude = location.coordinate.longitude
-            latitudeTextField.text = "\(latitude)"
-            longitudeTextField.text = "\(longitude)"
             locationManager.stopUpdatingLocation()
+            mapView.removeAnnotations(mapView.annotations)
         }
+        
+        let location = CLLocation(latitude: latitude, longitude: longitude)
+        let span = MKCoordinateSpanMake(0.025, 0.025)
+        let region = MKCoordinateRegion(center: location.coordinate, span: span)
+        mapView.centerCoordinate = location.coordinate
+        mapView.setRegion(region, animated: true)
     }
     
     func locationManager(manager: CLLocationManager!, didFailWithError error: NSError!) {
         let alert = UIAlertController(
             title: "Error Accessing Location",
-            message: "An unexpected error occured while accessing location data. Please open settings and verify that the location access for this app is set to \n'While Using the App'.",
+            message: "Please open settings and verify that the location access for this app is set to \n'While Using the App'. Also, make sure that the location services is turned on.",
             preferredStyle: UIAlertControllerStyle.Alert)
         let cancelAction = UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil)
         let openSettingsAction = UIAlertAction(title: "Open Settings", style: .Default) { (action) in

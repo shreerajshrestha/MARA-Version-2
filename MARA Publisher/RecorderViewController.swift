@@ -14,30 +14,46 @@ protocol RecorderDelegate {
 }
 
 class RecorderViewController: UIViewController, AVAudioPlayerDelegate, AVAudioRecorderDelegate, FDWaveformViewDelegate {
-    
-    var delegate: RecorderDelegate?
 
     @IBOutlet weak var waveform: FDWaveformView!
     @IBOutlet weak var recordStopPlayPauseButton: UIButton!
     @IBOutlet weak var useAudioButton: UIBarButtonItem!
     @IBOutlet weak var retakeButton: UIBarButtonItem!
+    @IBOutlet weak var waveformLeft: NSLayoutConstraint!
+    @IBOutlet weak var waveformRight: NSLayoutConstraint!
     
-    var audioPlayer: AVAudioPlayer?
-    var audioRecorder: AVAudioRecorder?
-    var fileURL: NSURL?
-    var timer: NSTimer?
+    internal var delegate: RecorderDelegate?
+    internal var filePath = NSString()
     
-    var state = NSString()
-    var filePath = NSString()
-    var fileManager = NSFileManager()
+    private var audioPlayer: AVAudioPlayer?
+    private var audioRecorder: AVAudioRecorder?
+    private var fileURL: NSURL?
+    private var timer: NSTimer?
+    
+    private var state = NSString()
+    private var fileManager = NSFileManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         state = "record"
         useAudioButton.enabled = false
         retakeButton.enabled = false
-        recordStopPlayPauseButton.setTitle("Record", forState: UIControlState.Normal)
+        recordStopPlayPauseButton.setImage(UIImage(named: "record"), forState: UIControlState.Normal)
         fileURL = NSURL(fileURLWithPath: filePath as String)!
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        var screenSize: CGSize = UIScreen.mainScreen().bounds.size as CGSize
+        
+        if screenSize.height > screenSize.width {
+            waveformLeft.constant = 0
+            waveformRight.constant = waveformLeft.constant
+        }
+        else {
+            waveformLeft.constant = (screenSize.width - (screenSize.height*4/3) + 50 ) / 2.0
+            waveformRight.constant = waveformLeft.constant
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -62,7 +78,7 @@ class RecorderViewController: UIViewController, AVAudioPlayerDelegate, AVAudioRe
     func updateWaveform() {
         UIView.animateWithDuration(0.001, animations: {
             let currentPlayTime = self.audioPlayer?.currentTime
-            let progressSample = UInt((currentPlayTime! + 0.065) * 44100.00)
+            let progressSample = UInt((currentPlayTime! + 0.010) * 44100.00)
             self.waveform.progressSamples = progressSample
         })
     }
@@ -95,7 +111,7 @@ class RecorderViewController: UIViewController, AVAudioPlayerDelegate, AVAudioRe
         switch state {
             
         case "record":
-            recordStopPlayPauseButton.setTitle("Stop", forState: UIControlState.Normal)
+            recordStopPlayPauseButton.setImage(UIImage(named: "stop"), forState: UIControlState.Normal)
             var audioSession = AVAudioSession.sharedInstance()
             audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, error: nil)
             audioSession.setActive(true, error: nil)
@@ -121,7 +137,7 @@ class RecorderViewController: UIViewController, AVAudioPlayerDelegate, AVAudioRe
         case "recording":
             useAudioButton.enabled = true
             retakeButton.enabled = true
-            recordStopPlayPauseButton.setTitle("Play", forState: UIControlState.Normal)
+            recordStopPlayPauseButton.setImage(UIImage(named: "play"), forState: UIControlState.Normal)
             audioRecorder?.stop()
             self.deactivateAudioSession()
             
@@ -138,16 +154,16 @@ class RecorderViewController: UIViewController, AVAudioPlayerDelegate, AVAudioRe
                 self.timer = NSTimer.scheduledTimerWithTimeInterval(0.001, target: self, selector: "updateWaveform", userInfo: nil, repeats: true)
                 audioPlayer?.play()
                 state = "playing"
-                recordStopPlayPauseButton.setTitle("Pause", forState: UIControlState.Normal)
+                recordStopPlayPauseButton.setImage(UIImage(named: "pause"), forState: UIControlState.Normal)
             }
                 
         case "playing":
-            recordStopPlayPauseButton.setTitle("Play", forState: UIControlState.Normal)
+            recordStopPlayPauseButton.setImage(UIImage(named: "play"), forState: UIControlState.Normal)
             audioPlayer?.pause()
             state = "paused"
                 
         case "paused":
-            recordStopPlayPauseButton.setTitle("Pause", forState: UIControlState.Normal)
+            recordStopPlayPauseButton.setImage(UIImage(named: "pause"), forState: UIControlState.Normal)
             audioPlayer?.play()
             state = "playing"
                 
@@ -158,15 +174,15 @@ class RecorderViewController: UIViewController, AVAudioPlayerDelegate, AVAudioRe
     }
     
     @IBAction func retakeButtonPressed(sender: UIBarButtonItem) {
-        recordStopPlayPauseButton.setTitle("Record", forState: UIControlState.Normal)
+        self.resetWaveform()
+        self.deactivateAudioSession()
+        recordStopPlayPauseButton.setImage(UIImage(named: "record"), forState: UIControlState.Normal)
         audioRecorder = nil
         audioPlayer = nil
         fileManager.removeItemAtPath(filePath as String, error: nil)
         useAudioButton.enabled = false
         retakeButton.enabled = false
         state = "record"
-        self.deactivateAudioSession()
-        self.generateWaveform()
     }
     
     
@@ -194,12 +210,12 @@ class RecorderViewController: UIViewController, AVAudioPlayerDelegate, AVAudioRe
         state = "record"
         useAudioButton.enabled = false
         retakeButton.enabled = false
-        recordStopPlayPauseButton.setTitle("Record", forState: UIControlState.Normal)
+        recordStopPlayPauseButton.setImage(UIImage(named: "record"), forState: UIControlState.Normal)
     }
     
     // MARK: - Audio Player Delegate
     func audioPlayerDidFinishPlaying(player: AVAudioPlayer!, successfully flag: Bool) {
-        recordStopPlayPauseButton.setTitle("Play", forState: UIControlState.Normal)
+        recordStopPlayPauseButton.setImage(UIImage(named: "play"), forState: UIControlState.Normal)
         deactivateAudioSession()
         self.resetWaveform()
         state = "stopped"
@@ -215,8 +231,8 @@ class RecorderViewController: UIViewController, AVAudioPlayerDelegate, AVAudioRe
     }
     
     func waveformViewDidRender(waveformView: FDWaveformView!) {
-        UIView.animateWithDuration(0.01, animations: {
-            self.waveform.alpha = 1.00
+        UIView.animateWithDuration(0.001, animations: {
+            self.waveform.alpha = 0.95
         })
     }
 

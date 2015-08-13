@@ -376,7 +376,6 @@
 - (void)handlePanGesture:(UIPanGestureRecognizer *)recognizer
 {
     CGPoint point = [recognizer translationInView:self];
-    NSLog(@"translation: %f", point.x);
     
     if (self.doesAllowStretchAndScroll) {
         long translationSamples = (float)(self.zoomEndSamples-self.zoomStartSamples) * point.x / self.bounds.size.width;
