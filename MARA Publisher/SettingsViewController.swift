@@ -7,41 +7,76 @@
 //
 
 import UIKit
+import Foundation
 
-class SettingsViewController: UITableViewController {
+private var kAssociationKeyNextField: UInt8 = 0
 
+extension UITextField {
+    var nextField: UITextField? {
+        get {
+            return objc_getAssociatedObject(self, &kAssociationKeyNextField) as? UITextField
+        }
+        set(newField) {
+            objc_setAssociatedObject(self, &kAssociationKeyNextField, newField, UInt(OBJC_ASSOCIATION_RETAIN))
+        }
+    }
+}
+
+class SettingsViewController: UITableViewController, UITextFieldDelegate, NSXMLParserDelegate {
     
     @IBOutlet weak var ftpUrlTextField: UITextField!
     @IBOutlet weak var ftpUsernameTextField: UITextField!
     @IBOutlet weak var ftpPasswordTextField: UITextField!
-    @IBOutlet weak var ftpMaskSwitch: UISwitch!
-    @IBOutlet weak var ftpMaskTextField: UITextField!
+    @IBOutlet weak var httpMaskSwitch: UISwitch!
+    @IBOutlet weak var httpMaskTextField: UITextField!
     @IBOutlet weak var blogUrlTextField: UITextField!
-    @IBOutlet weak var blogUserNameTextField: UITextField!
-    @IBOutlet weak var blogPasswordTextField: UITextField!
+    
+    var parser = NSXMLParser()
+    var ftpUrl = NSString()
+    var ftpUsername = NSString()
+    var blogUrl = NSString()
+    var useHttpMask = Int()
+    var httpMask = String()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem()
-        /*
-        let defaults = NSUserDefaults.standardUserDefaults()
-        ftpUrlTextField.text = defaults.objectForKey("ftpUrl") as? String
-        ftpUsernameTextField.text = defaults.objectForKey("ftpUsername") as? String
-        ftpPasswordTextField.text = defaults.objectForKey("ftpPassword") as? String
-        ftpMaskSwitch.on = defaults.boolForKey("ftpMaskOn")
-        ftpMaskTextField.text = defaults.objectForKey("ftpMask") as? String
-        blogUrlTextField.text = defaults.objectForKey("blogUrl") as? String
-        blogUserNameTextField.text = defaults.objectForKey("blogUsername") as? String
-        blogPasswordTextField.text = defaults.objectForKey("blogPassword") as? String
         
-        if defaults.boolForKey("ftpMaskOn") {
-            ftpMaskSwitch.on = true
-        }*/
+        httpMaskSwitch.addTarget(self, action: Selector("switchStateChanged:"), forControlEvents: UIControlEvents.ValueChanged)
+        
+        ftpUrlTextField.delegate = self
+        ftpUrlTextField.nextField = ftpUsernameTextField
+        ftpUsernameTextField.delegate = self
+        ftpUsernameTextField.nextField = ftpPasswordTextField
+        ftpPasswordTextField.delegate = self
+        ftpPasswordTextField.nextField = blogUrlTextField
+        blogUrlTextField.delegate = self
+        blogUrlTextField.nextField = httpMaskTextField
+        httpMaskTextField.delegate = self
+        
+        let defaults = NSUserDefaults.standardUserDefaults()
+        if let ftpUrl = defaults.objectForKey("ftpUrl") as? String {
+            ftpUrlTextField.text = ftpUrl
+        }
+        if let ftpUsername = defaults.objectForKey("ftpUsername") as? String {
+            ftpUsernameTextField.text = ftpUsername
+        }
+        if let ftpPassword = defaults.objectForKey("ftpPassword") as? String {
+            ftpPasswordTextField.text = ftpPassword
+        }
+        if let blogUrl = defaults.objectForKey("blogUrl") as? String {
+            blogUrlTextField.text = blogUrl
+        }
+        if defaults.boolForKey("useHttpMask") {
+            httpMaskSwitch.on = true
+        }
+        else {
+            httpMaskSwitch.on = false
+            httpMaskTextField.text = ""
+            httpMaskTextField.enabled = false
+        }
+        if let httpMask = defaults.objectForKey("httpMask") as? String {
+            httpMaskTextField.text = httpMask
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -49,26 +84,50 @@ class SettingsViewController: UITableViewController {
         // Dispose of any resources that can be recreated.
     }
     
+    func switchStateChanged(maskSwitch: UISwitch) {
+        if maskSwitch.on {
+            httpMaskTextField.enabled = true
+        }
+        else {
+            httpMaskTextField.text = ""
+            httpMaskTextField.enabled = false
+        }
+    }
+    
     @IBAction func backButtonPressed(sender: UIBarButtonItem) {
         
-        /*
         let defaults = NSUserDefaults.standardUserDefaults()
         defaults.setObject(ftpUrlTextField.text, forKey: "ftpUrl")
         defaults.setObject(ftpUsernameTextField.text, forKey: "ftpUsername")
         defaults.setObject(ftpPasswordTextField.text, forKey: "ftpPassword")
-        defaults.setBool(ftpMaskSwitch.on, forKey: "useFtpMask")
-        defaults.setObject(ftpMaskTextField.text, forKey: "ftpMask")
         defaults.setObject(blogUrlTextField.text, forKey: "blogUrl")
-        defaults.setObject(blogUserNameTextField.text, forKey: "blogUsername")
-        defaults.setObject(blogPasswordTextField.text, forKey: "blogPassword")
+        defaults.setBool(httpMaskSwitch.on == true, forKey: "useHttpMask")
+        defaults.setObject(httpMaskTextField.text, forKey: "httpMask")
         
         self.navigationController?.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
         self.dismissViewControllerAnimated(true, completion: nil)
-*/
     }
-
+    
+    // MARK: - UITextField Delegate
+    
+    func textFieldShouldReturn(textField: UITextField) -> Bool {
+        if let nextField = textField.nextField {
+            if nextField.enabled {
+                nextField.becomeFirstResponder()
+            }
+            else {
+                textField.resignFirstResponder()
+            }
+        }
+        else {
+            textField.resignFirstResponder()
+        }
+        return true
+    }
+    
     // MARK: - Table view data source
-
+    
+    /*
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         // #warning Potentially incomplete method implementation.
         // Return the number of sections.
@@ -80,8 +139,7 @@ class SettingsViewController: UITableViewController {
         // Return the number of rows in the section.
         return 0
     }
-
-    /*
+    
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("reuseIdentifier", forIndexPath: indexPath) as! UITableViewCell
 
@@ -135,5 +193,12 @@ class SettingsViewController: UITableViewController {
         // Pass the selected object to the new view controller.
     }
     */
-
+    
+    // MARK: - NSXML Parse Delegate
+    func parser(parser: NSXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [NSObject : AnyObject]) {
+        println(elementName)
+        
+    }
+    
+    
 }

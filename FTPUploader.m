@@ -157,13 +157,16 @@ enum {
         } break;
             
         case NSStreamEventHasSpaceAvailable: {
+            [self.delegate updateProgress:_bytesTransferred * 1.00 /_fileSize];
             if (_bufferOffset == _bufferLimit) {
                 NSInteger   bytesRead;
                 bytesRead = [fileStream read:_buffer maxLength:kSendBufferSize];
                 if (bytesRead == -1) {
+                    _bytesTransferred = 0;
                     [self.delegate uploadDidFailWithError:@"Source File Open Error!"];
                     [self stopUpload];
                 } else if (bytesRead == 0) {
+                    _bytesTransferred = 0;
                     [self.delegate uploadedSuccessfullyToURL:_ftpURL];
                     [self stopUpload];
                 } else {
@@ -177,18 +180,18 @@ enum {
                 bytesWritten = [networkStream write:&_buffer[_bufferOffset] maxLength:_bufferLimit - _bufferOffset];
                 assert(bytesWritten != 0);
                 if (bytesWritten == -1) {
-                    [self.delegate uploadDidFailWithError:@"FTP Server Write Error! \nPlease check your internet connectivity, ftp login credentials, and ftp access to the destination folder."];
+                    _bytesTransferred = 0;
+                    [self.delegate uploadDidFailWithError:@"FTP Server Write Error!"];
                     [self stopUpload];
                 } else {
                     _bufferOffset += bytesWritten;
                     _bytesTransferred += bytesWritten;
                 }
             }
-            [self.delegate updateProgress:_bytesTransferred/_fileSize];
         } break;
             
         case NSStreamEventErrorOccurred: {
-            [self.delegate uploadDidFailWithError:@"Network Stream Open Error! \nPlease check your internet connectivity, ftp login credentials, and ftp access to the destination folder."];
+            [self.delegate uploadDidFailWithError:@"Network Stream Open Error!"];
             [self stopUpload];
         } break;
             

@@ -28,6 +28,7 @@
 		0461CA671B68466D00A3C8B1 /* mara.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 0461CA651B68466C00A3C8B1 /* mara.xcdatamodeld */; };
 		0477D6951B797FEC001247DE /* FDWaveFormView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0477D6941B797FEC001247DE /* FDWaveFormView.m */; };
 		0477D6D51B799EC9001247DE /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0477D6D41B799EC9001247DE /* DetailViewController.swift */; };
+		04A59FD61B7EE3CA00B53224 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04A59FD51B7EE3CA00B53224 /* Security.framework */; };
 		04ADFF821B6603C90044A6D3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04ADFF811B6603C90044A6D3 /* AppDelegate.swift */; };
 		04ADFF891B6603C90044A6D3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 04ADFF871B6603C90044A6D3 /* Main.storyboard */; };
 		04ADFF8B1B6603CA0044A6D3 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 04ADFF8A1B6603C90044A6D3 /* Images.xcassets */; };
@@ -47,6 +48,19 @@
 			remoteInfo = "MARA Publisher";
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		04A59FD41B7EA54D00B53224 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		040344F21B79CC6E0081FD43 /* ALKeyboardObservingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ALKeyboardObservingView.swift; sourceTree = "<group>"; };
@@ -74,6 +88,7 @@
 		0477D6931B797FEC001247DE /* FDWaveFormView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FDWaveFormView.h; sourceTree = "<group>"; };
 		0477D6941B797FEC001247DE /* FDWaveFormView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FDWaveFormView.m; sourceTree = "<group>"; };
 		0477D6D41B799EC9001247DE /* DetailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailViewController.swift; sourceTree = "<group>"; };
+		04A59FD51B7EE3CA00B53224 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		04ADFF7C1B6603C90044A6D3 /* MARA Publisher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MARA Publisher.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		04ADFF801B6603C90044A6D3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		04ADFF811B6603C90044A6D3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -93,6 +108,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				04A59FD61B7EE3CA00B53224 /* Security.framework in Frameworks */,
 				04125F171B69C30E007CDD82 /* MediaPlayer.framework in Frameworks */,
 				04125F151B69A77C007CDD82 /* AVKit.framework in Frameworks */,
 			);
@@ -167,8 +183,9 @@
 				040EB67A1B7CD11B003A0F61 /* Reachability.m */,
 				0477D6931B797FEC001247DE /* FDWaveFormView.h */,
 				0477D6941B797FEC001247DE /* FDWaveFormView.m */,
-				04125F161B69C30E007CDD82 /* MediaPlayer.framework */,
+				04A59FD51B7EE3CA00B53224 /* Security.framework */,
 				04125F141B69A77C007CDD82 /* AVKit.framework */,
+				04125F161B69C30E007CDD82 /* MediaPlayer.framework */,
 				04ADFF7E1B6603C90044A6D3 /* MARA Publisher */,
 				04ADFF961B6603CA0044A6D3 /* MARA PublisherTests */,
 				04ADFF7D1B6603C90044A6D3 /* Products */,
@@ -241,6 +258,7 @@
 				04ADFF781B6603C90044A6D3 /* Sources */,
 				04ADFF791B6603C90044A6D3 /* Frameworks */,
 				04ADFF7A1B6603C90044A6D3 /* Resources */,
+				04A59FD41B7EA54D00B53224 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);

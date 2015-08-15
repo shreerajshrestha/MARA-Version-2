@@ -36,6 +36,7 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
     
     private var audioPlayer: AVAudioPlayer?
     private var timer: NSTimer?
+    private var webStatusTimer: NSTimer?
     private var fileURL: NSURL?
     
     private var name = String()
@@ -50,10 +51,13 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
     private var filePath = String()
     private var fileManager = NSFileManager()
     private var inputType = String()
-    private var webUrlExists = Bool()
     private var webURL = NSURL()
-    private var isEditing = Bool()
-    private var isUploading = Bool()
+    
+    private var webUrlExists: Bool = false
+    private var isEditing: Bool = false
+    private var isUploading: Bool = false
+    private var isDeleting: Bool = false
+    private var isPublishing: Bool = false
     
     private var uploader = FTPUploader()
     private let textInputBar = ALTextInputBar()
@@ -196,7 +200,7 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
             progressView.setProgress(1.0, animated: false)
         }
         
-        self.timer = NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: "updateInternetStatus", userInfo: nil, repeats: true)
+        self.webStatusTimer = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "updateWebButtonStatus", userInfo: nil, repeats: true)
     }
     
     override func viewWillLayoutSubviews() {
@@ -204,16 +208,18 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
         textInputBar.frame.size.width = view.bounds.size.width
     }
     
-    func updateInternetStatus() {
-        if !isUploading && !isEditing {
-            uploadButton.enabled = !fileExists(webURL) && internetAvailable()
-            publishButton.enabled = fileExists(webURL) && internetAvailable()
-        }
-        if internetAvailable() {
-            progressView.setProgress(1.0, animated: false)
-        }
-        else {
-            progressView.setProgress(0.0, animated: false)
+    func updateWebButtonStatus() {
+        if !isUploading && !isEditing && !isDeleting && !isPublishing {
+            if internetAvailable() {
+                progressView.setProgress(1.0, animated: false)
+                uploadButton.enabled = !fileExists(webURL) && internetAvailable()
+                publishButton.enabled = fileExists(webURL) && internetAvailable()
+            }
+            else {
+                progressView.setProgress(0.0, animated: false)
+                uploadButton.enabled = false
+                publishButton.enabled = false
+            }
         }
     }
     
@@ -230,14 +236,24 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
     
     func fileExists(url : NSURL!) -> Bool {
         
-        let req = NSMutableURLRequest(URL: url)
-        req.HTTPMethod = "HEAD"
-        req.timeoutInterval = 1.0 // Adjust to your needs
+        let request = NSMutableURLRequest(URL: url)
+        request.HTTPMethod = "HEAD"
         
         var response : NSURLResponse?
-        NSURLConnection.sendSynchronousRequest(req, returningResponse: &response, error: nil)
+        NSURLConnection.sendSynchronousRequest(request, returningResponse: &response , error: nil)
         
-        return ((response as? NSHTTPURLResponse)?.statusCode ?? -1) == 200
+        if let httpResponse = response as? NSHTTPURLResponse {
+            var fileSize : UInt64
+            var attr:NSDictionary? = NSFileManager.defaultManager().attributesOfItemAtPath(filePath, error: nil)
+            if let _attr = attr {
+                fileSize = _attr.fileSize();
+            }
+            else {
+                fileSize = 0
+            }
+            return Int64(fileSize) == httpResponse.expectedContentLength
+        }
+        return false
     }
     
     func configureInputBar() {
@@ -254,7 +270,6 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
         textInputBar.keyboardObserver = keyboardObserver
         textInputBar.textView.keyboardType = UIKeyboardType.ASCIICapable
         textInputBar.textView.autocapitalizationType = UITextAutocapitalizationType.Sentences
-        
     }
     
     func keyboardFrameChanged(notification: NSNotification) {
@@ -357,6 +372,7 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
     }
     
     @IBAction func cancelButtonPressed(sender: UIBarButtonItem) {
+        self.webStatusTimer?.invalidate()
         self.navigationController?.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
         self.dismissViewControllerAnimated(true, completion: nil)
     }
@@ -406,23 +422,25 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
             deleteButton.enabled = true
             cancelButton.enabled = true
             editButton.image = UIImage(named: "edit")
-            uploadButton.enabled = !fileExists(webURL) && internetAvailable()
-            publishButton.enabled = fileExists(webURL) && internetAvailable()
             textInputBar.textView.userInteractionEnabled = false
             textInputBar.textView.resignFirstResponder()
             textInputBar.hidden = true
             isEditing = false
+            updateWebButtonStatus()
         }
     }
     
     @IBAction func deleteButtonPressed(sender: UIBarButtonItem) {
         
+        isDeleting = true
+        
         let alert = UIAlertController(title: "Delete?",
             message: "The media file and its metadata will be deleted from your library. \n\nHowever, this does not affect the file uploaded to the server and any posts published for this media.",
             preferredStyle: UIAlertControllerStyle.Alert)
-        let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.Cancel, handler: nil)
+        let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.Cancel) { (action) in
+            self.isDeleting = false
+        }
         let yesAction = UIAlertAction(title: "Yes", style: UIAlertActionStyle.Destructive) { (action) in
-            
             self.managedObjectContext?.deleteObject(self.mediaObject!)
             var error: NSError?
             self.managedObjectContext?.save(&error)
@@ -434,9 +452,11 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
                 if let err2 = error2 {
                     println("fileManager delete error: \(err2.localizedDescription)")
                 } else {
+                    self.webStatusTimer?.invalidate()
                     self.dismissViewControllerAnimated(true, completion: nil)
                 }
             }
+            self.isDeleting = false
         }
         alert.addAction(cancelAction)
         alert.addAction(yesAction)
@@ -445,10 +465,12 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
     
     @IBAction func uploadButtonPressed(sender: UIBarButtonItem) {
         
-        uploader.FTPURL = "sociallocal.rollins.edu/mara/uploads"
-        uploader.FTPUsername = "social.rollins.edu|sshrestha"
-        uploader.FTPPassword = "@ce4meAKAorlando"
+        let defaults = NSUserDefaults.standardUserDefaults()
+        uploader.FTPURL = defaults.objectForKey("ftpUrl") as! String
+        uploader.FTPUsername = defaults.objectForKey("ftpUsername") as! String
+        uploader.FTPPassword = defaults.objectForKey("ftpPassword") as! String
         
+        progressView.setProgress(0.0, animated: false)
         cancelButton.enabled = false
         editButton.enabled = false
         deleteButton.enabled = false
@@ -489,9 +511,32 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
         progressView.setProgress(progress, animated: true)
     }
     
+    func cleanHttpAddress(mask: String) -> String {
+        var str = mask
+        if str[str.endIndex.predecessor()] != "/" && count(str) > 0 {
+            str = str + "/"
+        }
+        str = str.stringByReplacingOccurrencesOfString("ftp://", withString: "http://", options: NSStringCompareOptions.LiteralSearch, range: nil)
+        
+        if !str.hasPrefix("http://") {
+            str = "http://" + str
+        }
+        return str
+    }
+    
     func uploadedSuccessfullyToURL(URL: NSURL!) {
-        var urlString: String = URL.absoluteString!
-        urlString = urlString.stringByReplacingOccurrencesOfString("ftp://", withString: "http://", options: NSStringCompareOptions.LiteralSearch, range: nil)
+        let defaults = NSUserDefaults.standardUserDefaults()
+        var useHttpMask = defaults.boolForKey("useHttpMask")
+        var urlString = String()
+        if useHttpMask {
+            urlString = defaults.objectForKey("httpMask") as! String
+            urlString = cleanHttpAddress(urlString)
+            urlString = urlString + URL.lastPathComponent!
+        }
+        else {
+            urlString = URL.absoluteString!
+            urlString = cleanHttpAddress(urlString)
+        }
         webURL = NSURL(string: urlString)!
         mediaObject?.setValue(urlString, forKey:"url")
         var error: NSError?
@@ -502,9 +547,8 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
         cancelButton.enabled = true
         editButton.enabled = true
         deleteButton.enabled = true
-        uploadButton.enabled = !fileExists(webURL) && internetAvailable()
-        publishButton.enabled = fileExists(webURL) && internetAvailable()
         isUploading = false
+        updateWebButtonStatus()
     }
     
     func uploadDidFailWithError(error: String!) {
@@ -513,8 +557,7 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
         cancelButton.enabled = true
         editButton.enabled = true
         deleteButton.enabled = true
-        uploadButton.enabled = !fileExists(webURL) && internetAvailable()
-        publishButton.enabled = fileExists(webURL) && internetAvailable()
         isUploading = false
+        updateWebButtonStatus()
     }
 }
