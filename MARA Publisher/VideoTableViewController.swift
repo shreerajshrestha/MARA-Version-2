@@ -59,13 +59,13 @@ class VideoTableViewController: UITableViewController, NSFetchedResultsControlle
     }
     
     @IBAction func helpButtonClicked(sender: UIButton) {
-        let supportNC = self.storyboard?.instantiateViewControllerWithIdentifier("supportNC") as! UIViewController
+        let supportNC = self.storyboard?.instantiateViewControllerWithIdentifier("supportNC") as! UINavigationController
         supportNC.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
         self.presentViewController(supportNC, animated: true, completion: nil)
     }
     
     @IBAction func settingsButtonClicked(sender: UIBarButtonItem) {
-        let settingsNC = self.storyboard?.instantiateViewControllerWithIdentifier("settingsNC") as! UIViewController
+        let settingsNC = self.storyboard?.instantiateViewControllerWithIdentifier("settingsNC") as! UINavigationController
         settingsNC.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
         self.presentViewController(settingsNC, animated: true, completion: nil)
     }
@@ -117,7 +117,7 @@ class VideoTableViewController: UITableViewController, NSFetchedResultsControlle
         if let err = error {
             println("AVURLAsset copyCGImageAtTime error: \(err.localizedDescription)")
         }
-        let previewImage = UIImage(CGImage: cgImage)
+        var previewImage = UIImage(CGImage: cgImage)
         
         nameLabel.text = media!.name
         tagsLabel.text = media!.tags

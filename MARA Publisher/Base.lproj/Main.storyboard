@@ -37,7 +37,7 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <inset key="separatorInset" minX="75" minY="0.0" maxX="0.0" maxY="0.0"/>
                         <prototypes>
-                            <tableViewCell contentMode="scaleToFill" selectionStyle="none" accessoryType="disclosureIndicator" indentationWidth="10" reuseIdentifier="cell" id="JLr-tH-brg">
+                            <tableViewCell contentMode="scaleToFill" selectionStyle="default" accessoryType="disclosureIndicator" indentationWidth="10" reuseIdentifier="cell" id="JLr-tH-brg">
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="JLr-tH-brg" id="3J5-Qc-If2">
                                     <autoresizingMask key="autoresizingMask"/>
@@ -112,7 +112,7 @@
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="4Kw-qh-WA3" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2468" y="-448"/>
+            <point key="canvasLocation" x="1656" y="-468"/>
         </scene>
         <!--Support Page View Controller-->
         <scene sceneID="YMm-Zg-lsm">
@@ -125,7 +125,17 @@
                     <view key="view" contentMode="scaleToFill" id="GWb-cl-1eM">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="GeR-2T-bfp">
+                                <rect key="frame" x="0.0" y="64" width="414" height="2"/>
+                            </progressView>
+                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="GeR-2T-bfp" secondAttribute="trailing" id="CSN-Jn-DdR"/>
+                            <constraint firstItem="GeR-2T-bfp" firstAttribute="leading" secondItem="GWb-cl-1eM" secondAttribute="leading" id="I3m-n2-Cji"/>
+                            <constraint firstItem="GeR-2T-bfp" firstAttribute="top" secondItem="aRv-8c-7bj" secondAttribute="bottom" id="UVg-Yp-pFq"/>
+                        </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="iNC-2J-DVt">
                         <barButtonItem key="leftBarButtonItem" image="back" id="Jab-jW-A7t">
@@ -134,10 +144,13 @@
                             </connections>
                         </barButtonItem>
                     </navigationItem>
+                    <connections>
+                        <outlet property="progressView" destination="GeR-2T-bfp" id="Xes-7a-hD3"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="OAF-mY-tex" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="4804" y="-1516"/>
+            <point key="canvasLocation" x="1360" y="-1435"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="IEV-gf-e5H">
@@ -174,7 +187,7 @@
                             </connections>
                         </searchBar>
                         <prototypes>
-                            <tableViewCell contentMode="scaleToFill" selectionStyle="none" accessoryType="disclosureIndicator" indentationWidth="10" reuseIdentifier="cell" id="cCA-Cb-F6M">
+                            <tableViewCell contentMode="scaleToFill" selectionStyle="default" accessoryType="disclosureIndicator" indentationWidth="10" reuseIdentifier="cell" id="cCA-Cb-F6M">
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="cCA-Cb-F6M" id="Ajv-A4-Z4b">
                                     <autoresizingMask key="autoresizingMask"/>
@@ -290,7 +303,7 @@
                             </connections>
                         </searchBar>
                         <prototypes>
-                            <tableViewCell contentMode="scaleToFill" selectionStyle="none" accessoryType="disclosureIndicator" indentationWidth="10" reuseIdentifier="cell" id="83j-Ng-Tyg">
+                            <tableViewCell contentMode="scaleToFill" selectionStyle="default" accessoryType="disclosureIndicator" indentationWidth="10" reuseIdentifier="cell" id="83j-Ng-Tyg">
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="83j-Ng-Tyg" id="VZx-I9-slP">
                                     <autoresizingMask key="autoresizingMask"/>
@@ -646,7 +659,7 @@ Please press the center button on the top bar to capture media first. Then, ente
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="IEH-1c-cOh" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="4033" y="412"/>
+            <point key="canvasLocation" x="3580" y="412"/>
         </scene>
         <!--Detail View Controller-->
         <scene sceneID="dHX-t6-Iq4">
@@ -686,7 +699,11 @@ Please press the center button on the top bar to capture media first. Then, ente
                                         </connections>
                                     </barButtonItem>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="S8p-pA-RBd"/>
-                                    <barButtonItem enabled="NO" image="publish" id="q1L-rG-SRq" userLabel="Publish"/>
+                                    <barButtonItem enabled="NO" image="publish" id="q1L-rG-SRq" userLabel="Publish">
+                                        <connections>
+                                            <action selector="publishButtonPressed:" destination="egW-Sj-YF5" id="53Z-Hz-igX"/>
+                                        </connections>
+                                    </barButtonItem>
                                 </items>
                             </toolbar>
                             <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="EnF-na-G2O">
@@ -936,7 +953,7 @@ Please press the center button on the top bar to capture media first. Then, ente
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="JcR-Kf-1Sm" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3034" y="1524"/>
+            <point key="canvasLocation" x="3026" y="1298"/>
         </scene>
         <!--Recorder View Controller-->
         <scene sceneID="Qd9-hZ-Co4">
@@ -952,8 +969,15 @@ Please press the center button on the top bar to capture media first. Then, ente
                         <subviews>
                             <view userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="RXY-Dp-wlm" customClass="FDWaveformView">
                                 <rect key="frame" x="16" y="84" width="382" height="215"/>
+                                <subviews>
+                                    <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="uap-wr-xh4">
+                                        <rect key="frame" x="181" y="98" width="20" height="20"/>
+                                    </activityIndicatorView>
+                                </subviews>
                                 <constraints>
+                                    <constraint firstAttribute="centerY" secondItem="uap-wr-xh4" secondAttribute="centerY" constant="-0.5" id="6jY-wt-qUA"/>
                                     <constraint firstAttribute="width" secondItem="RXY-Dp-wlm" secondAttribute="height" multiplier="16:9" id="cs4-jA-1o9"/>
+                                    <constraint firstAttribute="centerX" secondItem="uap-wr-xh4" secondAttribute="centerX" id="rMs-HM-94j"/>
                                 </constraints>
                             </view>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="sZS-xY-gOg" userLabel="RecordPlay">
@@ -996,6 +1020,7 @@ Please press the center button on the top bar to capture media first. Then, ente
                         </barButtonItem>
                     </navigationItem>
                     <connections>
+                        <outlet property="activityIndicator" destination="uap-wr-xh4" id="mq3-T8-tLb"/>
                         <outlet property="recordStopPlayPauseButton" destination="sZS-xY-gOg" id="Dfg-6Z-DlW"/>
                         <outlet property="retakeButton" destination="Ebv-Rf-vXu" id="aB3-AW-Y4e"/>
                         <outlet property="useAudioButton" destination="obM-Ju-fMm" id="gFd-6U-EG1"/>
@@ -1006,7 +1031,7 @@ Please press the center button on the top bar to capture media first. Then, ente
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="k3q-f6-3Ku" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="5437" y="-222"/>
+            <point key="canvasLocation" x="5093" y="418"/>
         </scene>
         <!--Player View Controller-->
         <scene sceneID="U9X-3S-qSZ">
@@ -1025,7 +1050,7 @@ Please press the center button on the top bar to capture media first. Then, ente
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="6mz-Js-aGw" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3580" y="1145"/>
+            <point key="canvasLocation" x="3580" y="1289"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="atr-UE-Qe5">
@@ -1047,7 +1072,7 @@ Please press the center button on the top bar to capture media first. Then, ente
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Mlp-rF-1Pd" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="4665" y="-222"/>
+            <point key="canvasLocation" x="4321" y="418"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="6ic-F3-EAb">
@@ -1172,7 +1197,7 @@ Please press the center button on the top bar to capture media first. Then, ente
                                                         <constraint firstAttribute="height" constant="30" id="ujo-hq-sj3"/>
                                                     </constraints>
                                                     <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                                    <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" keyboardType="alphabet" keyboardAppearance="alert" returnKeyType="done"/>
+                                                    <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" keyboardType="alphabet" keyboardAppearance="alert" returnKeyType="next"/>
                                                 </textField>
                                             </subviews>
                                             <color key="backgroundColor" red="0.93725490199999995" green="0.93725490199999995" blue="0.95686274510000002" alpha="1" colorSpace="calibratedRGB"/>
@@ -1275,7 +1300,11 @@ Please press the center button on the top bar to capture media first. Then, ente
                                 <action selector="backButtonPressed:" destination="Nch-a9-47F" id="UBB-2R-Bw1"/>
                             </connections>
                         </barButtonItem>
-                        <barButtonItem key="rightBarButtonItem" title="Import" id="RlN-EX-jmZ"/>
+                        <barButtonItem key="rightBarButtonItem" title="Import" style="done" id="RlN-EX-jmZ">
+                            <connections>
+                                <action selector="importButtonPressed:" destination="Nch-a9-47F" id="DE6-01-FLT"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
@@ -1289,7 +1318,52 @@ Please press the center button on the top bar to capture media first. Then, ente
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="bEw-np-g4P" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2509" y="-1553"/>
+            <point key="canvasLocation" x="3957" y="-961"/>
+        </scene>
+        <!--Publish View Controller-->
+        <scene sceneID="Sme-hK-tCl">
+            <objects>
+                <viewController storyboardIdentifier="publishVC" useStoryboardIdentifierAsRestorationIdentifier="YES" id="Hd3-Gr-OZf" customClass="PublishViewController" customModule="MARA_Publisher" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="xVv-ZD-hol"/>
+                        <viewControllerLayoutGuide type="bottom" id="3B0-n0-hRQ"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="mxh-Qd-Xeh">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="t8h-qT-Glw">
+                                <rect key="frame" x="0.0" y="64" width="414" height="2"/>
+                            </progressView>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="t8h-qT-Glw" firstAttribute="leading" secondItem="mxh-Qd-Xeh" secondAttribute="leading" id="4gG-1F-cUw"/>
+                            <constraint firstAttribute="trailing" secondItem="t8h-qT-Glw" secondAttribute="trailing" id="7MO-2g-Tty"/>
+                            <constraint firstItem="t8h-qT-Glw" firstAttribute="top" secondItem="xVv-ZD-hol" secondAttribute="bottom" id="CTr-iK-Fzc"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="wcm-du-e75">
+                        <barButtonItem key="leftBarButtonItem" image="back" id="jgs-6p-mJp" userLabel="Back">
+                            <connections>
+                                <action selector="backButtonPressed:" destination="Hd3-Gr-OZf" id="oWC-fu-5b1"/>
+                            </connections>
+                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" image="compose" id="CBW-Jp-ESi">
+                            <connections>
+                                <action selector="publishButtonPressed:" destination="Hd3-Gr-OZf" id="rqt-l2-KEN"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="backButton" destination="jgs-6p-mJp" id="i3Z-LG-cDT"/>
+                        <outlet property="progressView" destination="t8h-qT-Glw" id="5oe-XZ-vGg"/>
+                        <outlet property="publishButton" destination="CBW-Jp-ESi" id="kvR-Sh-bbJ"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="2EU-4Z-uYq" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2856" y="-1370"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="Xw9-t6-s24">
@@ -1308,7 +1382,7 @@ Please press the center button on the top bar to capture media first. Then, ente
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Lib-uq-BiK" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3076" y="-699"/>
+            <point key="canvasLocation" x="692" y="-1435"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="PxI-Kf-KBY">
@@ -1327,7 +1401,26 @@ Please press the center button on the top bar to capture media first. Then, ente
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="2T2-VE-zGO" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1955" y="-1466"/>
+            <point key="canvasLocation" x="3403" y="-874"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="HFW-pP-Lha">
+            <objects>
+                <navigationController storyboardIdentifier="publishNC" automaticallyAdjustsScrollViewInsets="NO" useStoryboardIdentifierAsRestorationIdentifier="YES" id="6qt-PB-ysj" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina55"/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="ZWn-UZ-yO5">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="Hd3-Gr-OZf" kind="relationship" relationship="rootViewController" id="FlJ-IO-9Mw"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="XvA-h9-mXE" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2180" y="-1370"/>
         </scene>
     </scenes>
     <resources>
@@ -1351,8 +1444,8 @@ Please press the center button on the top bar to capture media first. Then, ente
         <image name="video" width="25" height="25"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="yTs-rY-an4"/>
-        <segue reference="RQ9-Zu-4h8"/>
+        <segue reference="eqC-5e-1YF"/>
+        <segue reference="VHn-bb-8yA"/>
         <segue reference="WZu-8y-F4Z"/>
     </inferredMetricsTieBreakers>
 </document>

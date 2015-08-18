@@ -15,7 +15,7 @@ import AVKit
 import CoreData
 import MapKit
 
-class AddMediaViewController: UIViewController, UINavigationControllerDelegate, UIImagePickerControllerDelegate,  CLLocationManagerDelegate, AVAudioPlayerDelegate, MKMapViewDelegate, RecorderDelegate, FDWaveformViewDelegate {
+class AddMediaViewController: UIViewController, UINavigationControllerDelegate, UIImagePickerControllerDelegate,  CLLocationManagerDelegate, AVAudioPlayerDelegate, MKMapViewDelegate, RecorderDelegate, FDWaveformViewDelegate , ALTextInputBarDelegate {
     
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var tagListView: TagListView!
@@ -34,6 +34,7 @@ class AddMediaViewController: UIViewController, UINavigationControllerDelegate, 
     private var timer: NSTimer?
     private var tempURL: NSURL?
     private var fileURL: NSURL?
+    private var nextButton: UIButton!
     
     private var name = String()
     private var tags = String()
@@ -162,7 +163,9 @@ class AddMediaViewController: UIViewController, UINavigationControllerDelegate, 
             locationManager.startUpdatingLocation()
         }
         
-        self.timer = NSTimer.scheduledTimerWithTimeInterval(2, target: self, selector: "flicker", userInfo: self.captureButton, repeats: true)
+        UIView.animateWithDuration(1.5, delay:0.0, options: .CurveEaseInOut | .Autoreverse | .AllowUserInteraction | .Repeat, animations: {
+            self.captureButton.alpha = 0.1
+            }, completion: nil)
     }
     
     override func viewWillLayoutSubviews() {
@@ -175,51 +178,7 @@ class AddMediaViewController: UIViewController, UINavigationControllerDelegate, 
         var screenSize: CGSize = UIScreen.mainScreen().bounds.size as CGSize
     }
     
-    func configureInputBar() {
-        let rightButton = UIButton(frame: CGRectMake(0, 0, 44, 44))
-        rightButton.addTarget(self, action: "typeButtonPressed:", forControlEvents: UIControlEvents.TouchUpInside)
-        rightButton.setImage(UIImage(named: "textInput"), forState: UIControlState.Normal)
-        keyboardObserver.userInteractionEnabled = false
-        textInputBar.leftView = nil
-        textInputBar.rightView = rightButton
-        textInputBar.frame = CGRectMake(0, view.frame.size.height - textInputBar.defaultHeight, view.frame.size.width, textInputBar.defaultHeight)
-        textInputBar.horizontalPadding = 10
-        textInputBar.backgroundColor = UIColor.groupTableViewBackgroundColor()
-        textInputBar.keyboardObserver = keyboardObserver
-        textInputBar.textView.keyboardType = UIKeyboardType.ASCIICapable
-        textInputBar.textView.autocapitalizationType = UITextAutocapitalizationType.Sentences
-    }
-    
-    func keyboardFrameChanged(notification: NSNotification) {
-        if let userInfo = notification.userInfo {
-            let frame = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue()
-            textInputBar.frame.origin.y = frame.origin.y
-        }
-    }
-    
-    func keyboardWillShow(notification: NSNotification) {
-        if let userInfo = notification.userInfo {
-            let frame = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue()
-            textInputBar.frame.origin.y = frame.origin.y
-        }
-    }
-    
-    func keyboardWillHide(notification: NSNotification) {
-        if let userInfo = notification.userInfo {
-            let frame = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue()
-            textInputBar.frame.origin.y = frame.origin.y
-        }
-    }
-    
-    func flicker() {
-        let button = self.timer?.userInfo as! UIButton
-        button.alpha = 0.0
-        UIView.animateWithDuration(0.12, delay:0.0, options: .CurveEaseIn | .Autoreverse | .AllowUserInteraction, animations: {
-            button.alpha = 1.0
-        }, completion: nil)
-    }
-    
-    func typeButtonPressed(sender:UIButton!) {
+    func typeButtonPressed(sender: UIButton!) {
         
         switch inputType {
             
@@ -241,6 +200,10 @@ class AddMediaViewController: UIViewController, UINavigationControllerDelegate, 
             pin.subtitle = tags
             mapView.addAnnotation(pin)
             
+            UIView.animateWithDuration(1.5, delay:0.0, options: .CurveEaseInOut | .Autoreverse | .AllowUserInteraction | .Repeat, animations: {
+                self.nextButton.alpha = 0.1
+                }, completion: nil)
+            
         case "description":
             descriptor = textInputBar.text
             descriptionTextView.selectable = true
@@ -257,12 +220,51 @@ class AddMediaViewController: UIViewController, UINavigationControllerDelegate, 
         }
         
         if inputType == "complete" {
+            nextButton.layer.removeAllAnimations()
             textInputBar.textView.userInteractionEnabled = false
             textInputBar.textView.resignFirstResponder()
             textInputBar.hidden = true
         }
-        
         textInputBar.text = ""
+    }
+    
+    func configureInputBar() {
+        nextButton = UIButton(frame: CGRectMake(0, 0, 44, 44))
+        nextButton.addTarget(self, action: "typeButtonPressed:", forControlEvents: UIControlEvents.TouchUpInside)
+        nextButton.setImage(UIImage(named: "textInput"), forState: UIControlState.Normal)
+        
+        keyboardObserver.userInteractionEnabled = false
+        textInputBar.leftView = nil
+        textInputBar.rightView = nextButton
+        textInputBar.frame = CGRectMake(0, view.frame.size.height - textInputBar.defaultHeight, view.frame.size.width, textInputBar.defaultHeight)
+        textInputBar.horizontalPadding = 10
+        textInputBar.backgroundColor = UIColor.groupTableViewBackgroundColor()
+        textInputBar.keyboardObserver = keyboardObserver
+        textInputBar.textView.keyboardType = UIKeyboardType.ASCIICapable
+        textInputBar.textView.autocapitalizationType = UITextAutocapitalizationType.None
+        textInputBar.textView.returnKeyType = UIReturnKeyType.Default
+        textInputBar.delegate = self
+    }
+    
+    func keyboardFrameChanged(notification: NSNotification) {
+        if let userInfo = notification.userInfo {
+            let frame = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue()
+            textInputBar.frame.origin.y = frame.origin.y
+        }
+    }
+    
+    func keyboardWillShow(notification: NSNotification) {
+        if let userInfo = notification.userInfo {
+            let frame = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue()
+            textInputBar.frame.origin.y = frame.origin.y
+        }
+    }
+    
+    func keyboardWillHide(notification: NSNotification) {
+        if let userInfo = notification.userInfo {
+            let frame = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue()
+            textInputBar.frame.origin.y = frame.origin.y
+        }
     }
     
     func showCamera() {
@@ -336,12 +338,6 @@ class AddMediaViewController: UIViewController, UINavigationControllerDelegate, 
     }
 
     @IBAction func captureButtonPressed(sender: UIButton) {
-        if self.timer?.valid == true {
-            let button = self.timer?.userInfo as! UIButton
-            if button == captureButton {
-                self.timer?.invalidate()
-            }
-        }
         if mediaType == "recording" {
             let recorderNC = self.storyboard?.instantiateViewControllerWithIdentifier("recorderNC") as! UINavigationController
             recorderNC.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
@@ -376,17 +372,31 @@ class AddMediaViewController: UIViewController, UINavigationControllerDelegate, 
             var fileName = NSString()
             
             do {
-                let id = arc4random() % 999999999
                 var pathComponents = NSArray()
+                
+                var str = name as String
+                var cleanName = ""
+                var charSet = NSCharacterSet(charactersInString: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
+                for char in str {
+                    if String(char).rangeOfCharacterFromSet(charSet, options: nil, range: nil) != nil {
+                        cleanName = cleanName + String(char)
+                    }
+                }
+                cleanName = cleanName.stringByReplacingOccurrencesOfString(" ", withString: "", options: .LiteralSearch, range: nil)
+                if count(cleanName) == 0 {
+                    cleanName = "Random"
+                }
+                
+                let id = arc4random() % 999999999
                 switch mediaType {
                 case "image":
-                    fileName = NSString(format: "%@%d.jpg", name.stringByReplacingOccurrencesOfString(" ", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil), id) as! String
+                    fileName = String(format: "%@%d.jpg", cleanName, id)
                     pathComponents = NSArray(objects: documentsDirectory, "/Images/", fileName)
                 case "video":
-                    fileName = NSString(format: "%@%d.mp4", name.stringByReplacingOccurrencesOfString(" ", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil), id) as! String
+                    fileName = String(format: "%@%d.mp4", cleanName, id)
                     pathComponents = NSArray(objects: documentsDirectory, "/Videos/", fileName)
                 case "recording":
-                    fileName = NSString(format: "%@%d.m4a", name.stringByReplacingOccurrencesOfString(" ", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil), id) as! String
+                    fileName = String(format: "%@%d.m4a", cleanName, id)
                     pathComponents = NSArray(objects: documentsDirectory, "/Recordings/", fileName)
                 default:
                     pathComponents = NSArray()
@@ -470,6 +480,32 @@ class AddMediaViewController: UIViewController, UINavigationControllerDelegate, 
     }
     */
     
+    // MARK: - ALTextView Delegate
+    func textViewShouldReturn(textView: ALTextView) -> Bool {
+        if inputType == "description" {
+            return true
+        }
+        if count(textView.text) == 0 {
+            let alert = UIAlertController(title: "Text Field Empty!", message: "Please type in some text to proceed.", preferredStyle: UIAlertControllerStyle.Alert)
+            let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil)
+            alert.addAction(okAction)
+            self.presentViewController(alert, animated: true, completion: nil)
+            return false
+        }
+        typeButtonPressed(UIButton())
+        return false
+    }
+    
+    /*
+    func textViewDidChange(textView: ALTextView) {
+        var str = textView.text as String
+        if str.startIndex != str.endIndex {
+            println(str[str.endIndex.predecessor()])
+        }
+    }
+    */
+    
+    
     // MARK: - Image Picker Controller
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
@@ -480,6 +516,7 @@ class AddMediaViewController: UIViewController, UINavigationControllerDelegate, 
             UIImageJPEGRepresentation(capturedImage, 1.0).writeToFile(tempPath, atomically: true)
             if let tempImage = UIImage(contentsOfFile: tempPath) {
                 imagePreview.image = tempImage
+                captureButton.layer.removeAllAnimations()
                 captureButton.enabled = false
                 saveButton.enabled = true
                 view.addSubview(textInputBar)
@@ -496,6 +533,7 @@ class AddMediaViewController: UIViewController, UINavigationControllerDelegate, 
             let session = AVAudioSession.sharedInstance()
             session.setMode(AVAudioSessionModeMoviePlayback, error: nil)
             embededVC.player = AVPlayer(URL: tempURL)
+            captureButton.layer.removeAllAnimations()
             captureButton.enabled = false
             saveButton.enabled = true
             view.addSubview(textInputBar)
@@ -540,6 +578,7 @@ class AddMediaViewController: UIViewController, UINavigationControllerDelegate, 
         if let err = error {
             println("audioPlayer error: \(err.localizedDescription)")
         }
+        captureButton.layer.removeAllAnimations()
         captureButton.enabled = false
         saveButton.enabled = true
         view.addSubview(textInputBar)

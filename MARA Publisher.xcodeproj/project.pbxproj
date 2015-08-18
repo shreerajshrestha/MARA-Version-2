@@ -26,9 +26,13 @@
 		042E3B9C1B708E9400087EBA /* RecorderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042E3B9B1B708E9400087EBA /* RecorderViewController.swift */; };
 		042F03421B71949F003180C3 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 042F03411B71949F003180C3 /* LaunchScreen.xib */; };
 		0461CA671B68466D00A3C8B1 /* mara.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 0461CA651B68466C00A3C8B1 /* mara.xcdatamodeld */; };
+		0464AE961B8134B200374DEF /* PublishViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0464AE951B8134B200374DEF /* PublishViewController.swift */; };
 		0477D6951B797FEC001247DE /* FDWaveFormView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0477D6941B797FEC001247DE /* FDWaveFormView.m */; };
 		0477D6D51B799EC9001247DE /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0477D6D41B799EC9001247DE /* DetailViewController.swift */; };
 		04A59FD61B7EE3CA00B53224 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04A59FD51B7EE3CA00B53224 /* Security.framework */; };
+		04A59FDF1B7EE87700B53224 /* SSKeychain.strings in Resources */ = {isa = PBXBuildFile; fileRef = 04A59FD81B7EE87700B53224 /* SSKeychain.strings */; };
+		04A59FE11B7EE87700B53224 /* SSKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = 04A59FDC1B7EE87700B53224 /* SSKeychain.m */; };
+		04A59FE21B7EE87700B53224 /* SSKeychainQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 04A59FDE1B7EE87700B53224 /* SSKeychainQuery.m */; };
 		04ADFF821B6603C90044A6D3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04ADFF811B6603C90044A6D3 /* AppDelegate.swift */; };
 		04ADFF891B6603C90044A6D3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 04ADFF871B6603C90044A6D3 /* Main.storyboard */; };
 		04ADFF8B1B6603CA0044A6D3 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 04ADFF8A1B6603C90044A6D3 /* Images.xcassets */; };
@@ -85,10 +89,16 @@
 		042E3B9B1B708E9400087EBA /* RecorderViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecorderViewController.swift; sourceTree = "<group>"; };
 		042F03411B71949F003180C3 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		0461CA661B68466C00A3C8B1 /* mara.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = mara.xcdatamodel; sourceTree = "<group>"; };
+		0464AE951B8134B200374DEF /* PublishViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PublishViewController.swift; sourceTree = "<group>"; };
 		0477D6931B797FEC001247DE /* FDWaveFormView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FDWaveFormView.h; sourceTree = "<group>"; };
 		0477D6941B797FEC001247DE /* FDWaveFormView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FDWaveFormView.m; sourceTree = "<group>"; };
 		0477D6D41B799EC9001247DE /* DetailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailViewController.swift; sourceTree = "<group>"; };
 		04A59FD51B7EE3CA00B53224 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		04A59FD91B7EE87700B53224 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/SSKeychain.strings; sourceTree = "<group>"; };
+		04A59FDB1B7EE87700B53224 /* SSKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SSKeychain.h; path = "../../../../Downloads/sskeychain-master/SSKeychain/SSKeychain.h"; sourceTree = "<group>"; };
+		04A59FDC1B7EE87700B53224 /* SSKeychain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SSKeychain.m; path = "../../../../Downloads/sskeychain-master/SSKeychain/SSKeychain.m"; sourceTree = "<group>"; };
+		04A59FDD1B7EE87700B53224 /* SSKeychainQuery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SSKeychainQuery.h; path = "../../../../Downloads/sskeychain-master/SSKeychain/SSKeychainQuery.h"; sourceTree = "<group>"; };
+		04A59FDE1B7EE87700B53224 /* SSKeychainQuery.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SSKeychainQuery.m; path = "../../../../Downloads/sskeychain-master/SSKeychain/SSKeychainQuery.m"; sourceTree = "<group>"; };
 		04ADFF7C1B6603C90044A6D3 /* MARA Publisher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MARA Publisher.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		04ADFF801B6603C90044A6D3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		04ADFF811B6603C90044A6D3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -183,6 +193,11 @@
 				040EB67A1B7CD11B003A0F61 /* Reachability.m */,
 				0477D6931B797FEC001247DE /* FDWaveFormView.h */,
 				0477D6941B797FEC001247DE /* FDWaveFormView.m */,
+				04A59FDB1B7EE87700B53224 /* SSKeychain.h */,
+				04A59FDC1B7EE87700B53224 /* SSKeychain.m */,
+				04A59FDD1B7EE87700B53224 /* SSKeychainQuery.h */,
+				04A59FDE1B7EE87700B53224 /* SSKeychainQuery.m */,
+				04A59FD81B7EE87700B53224 /* SSKeychain.strings */,
 				04A59FD51B7EE3CA00B53224 /* Security.framework */,
 				04125F141B69A77C007CDD82 /* AVKit.framework */,
 				04125F161B69C30E007CDD82 /* MediaPlayer.framework */,
@@ -214,6 +229,7 @@
 				0477D6D41B799EC9001247DE /* DetailViewController.swift */,
 				042E3B9B1B708E9400087EBA /* RecorderViewController.swift */,
 				040EB6721B7C6FDA003A0F61 /* SupportPageViewController.swift */,
+				0464AE951B8134B200374DEF /* PublishViewController.swift */,
 				0415D9641B7D3A8B00BB5949 /* SettingsViewController.swift */,
 				04ADFF8A1B6603C90044A6D3 /* Images.xcassets */,
 				042F03411B71949F003180C3 /* LaunchScreen.xib */,
@@ -330,6 +346,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				04A59FDF1B7EE87700B53224 /* SSKeychain.strings in Resources */,
 				04ADFF891B6603C90044A6D3 /* Main.storyboard in Resources */,
 				042F03421B71949F003180C3 /* LaunchScreen.xib in Resources */,
 				04ADFF8B1B6603CA0044A6D3 /* Images.xcassets in Resources */,
@@ -366,7 +383,10 @@
 				040344FB1B79CC6E0081FD43 /* ALTextView.swift in Sources */,
 				040345001B79CC760081FD43 /* TagView.swift in Sources */,
 				0415D9651B7D3A8B00BB5949 /* SettingsViewController.swift in Sources */,
+				0464AE961B8134B200374DEF /* PublishViewController.swift in Sources */,
+				04A59FE21B7EE87700B53224 /* SSKeychainQuery.m in Sources */,
 				040344FF1B79CC760081FD43 /* TagListView.swift in Sources */,
+				04A59FE11B7EE87700B53224 /* SSKeychain.m in Sources */,
 				040EB67B1B7CD11B003A0F61 /* Reachability.m in Sources */,
 				040344F91B79CC6E0081FD43 /* ALTextInputBarDelegate.swift in Sources */,
 				04ADFFA71B6604560044A6D3 /* AddMediaViewController.swift in Sources */,
@@ -395,6 +415,15 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		04A59FD81B7EE87700B53224 /* SSKeychain.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				04A59FD91B7EE87700B53224 /* en */,
+			);
+			name = SSKeychain.strings;
+			path = "../../../../Downloads/sskeychain-master/SSKeychain";
+			sourceTree = "<group>";
+		};
 		04ADFF871B6603C90044A6D3 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -496,7 +525,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = "MARA Publisher/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "MARA Publisher-Bridging-Header.h";
@@ -511,7 +540,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = "MARA Publisher/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "MARA Publisher-Bridging-Header.h";

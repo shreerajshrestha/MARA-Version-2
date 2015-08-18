@@ -31,15 +31,16 @@ class SettingsViewController: UITableViewController, UITextFieldDelegate, NSXMLP
     @IBOutlet weak var httpMaskTextField: UITextField!
     @IBOutlet weak var blogUrlTextField: UITextField!
     
-    var parser = NSXMLParser()
-    var ftpUrl = NSString()
-    var ftpUsername = NSString()
-    var blogUrl = NSString()
-    var useHttpMask = Int()
-    var httpMask = String()
+    private var xmlParser: NSXMLParser = NSXMLParser(contentsOfURL: NSURL(string:"http://social.rollins.edu/mara/settings.xml"))!
+    private var settings = [[String:String]()]
+    private var setting = [String:String]()
+    private var elementString = String()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        xmlParser.delegate = self
+        xmlParser.parse()
         
         httpMaskSwitch.addTarget(self, action: Selector("switchStateChanged:"), forControlEvents: UIControlEvents.ValueChanged)
         
@@ -60,9 +61,15 @@ class SettingsViewController: UITableViewController, UITextFieldDelegate, NSXMLP
         if let ftpUsername = defaults.objectForKey("ftpUsername") as? String {
             ftpUsernameTextField.text = ftpUsername
         }
-        if let ftpPassword = defaults.objectForKey("ftpPassword") as? String {
+        
+        var error: NSError?
+        if let ftpPassword = SSKeychain.passwordForService("mara.ftp", account: defaults.objectForKey("ftpUsername") as? String, error: &error) {
             ftpPasswordTextField.text = ftpPassword
         }
+        if let err = error {
+            println("SSKeychain setPassword error: \(err.localizedDescription)")
+        }
+        
         if let blogUrl = defaults.objectForKey("blogUrl") as? String {
             blogUrlTextField.text = blogUrl
         }
@@ -71,7 +78,6 @@ class SettingsViewController: UITableViewController, UITextFieldDelegate, NSXMLP
         }
         else {
             httpMaskSwitch.on = false
-            httpMaskTextField.text = ""
             httpMaskTextField.enabled = false
         }
         if let httpMask = defaults.objectForKey("httpMask") as? String {
@@ -89,23 +95,73 @@ class SettingsViewController: UITableViewController, UITextFieldDelegate, NSXMLP
             httpMaskTextField.enabled = true
         }
         else {
-            httpMaskTextField.text = ""
             httpMaskTextField.enabled = false
         }
     }
     
-    @IBAction func backButtonPressed(sender: UIBarButtonItem) {
-        
+    func saveUserSettings() {
         let defaults = NSUserDefaults.standardUserDefaults()
         defaults.setObject(ftpUrlTextField.text, forKey: "ftpUrl")
         defaults.setObject(ftpUsernameTextField.text, forKey: "ftpUsername")
-        defaults.setObject(ftpPasswordTextField.text, forKey: "ftpPassword")
         defaults.setObject(blogUrlTextField.text, forKey: "blogUrl")
         defaults.setBool(httpMaskSwitch.on == true, forKey: "useHttpMask")
         defaults.setObject(httpMaskTextField.text, forKey: "httpMask")
         
+        var error: NSError?
+        SSKeychain.setPassword(ftpPasswordTextField.text, forService: "mara.ftp", account: defaults.objectForKey("ftpUsername") as! String, error: &error)
+        if let err = error {
+            println("SSKeychain setPassword error: \(err.localizedDescription)")
+        }
+    }
+    
+    @IBAction func backButtonPressed(sender: UIBarButtonItem) {
+        saveUserSettings()
         self.navigationController?.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
         self.dismissViewControllerAnimated(true, completion: nil)
+    }
+    
+    func internetAvailable() -> Bool {
+        let reachability: Reachability = Reachability.reachabilityForInternetConnection()
+        let connectivity: Int = reachability.currentReachabilityStatus().value
+        if connectivity == 1 {
+            return true
+        }
+        else {
+            return false
+        }
+    }
+    
+    func importSettingsAtIndex(index: Int) {
+        ftpUrlTextField.text = settings[index]["ftpUrl"]
+        ftpUsernameTextField.text = settings[index]["ftpUsername"]
+        ftpPasswordTextField.text = ""
+        blogUrlTextField.text = settings[index]["blogUrl"]
+        httpMaskSwitch.on = settings[index]["useHttpMask"] == "1"
+        httpMaskTextField.text = httpMaskSwitch.on ? settings[index]["httpMask"] : ""
+    }
+    
+    @IBAction func importButtonPressed(sender: UIBarButtonItem) {
+        
+        if !internetAvailable() {
+            let alert = UIAlertController(title: "No Internet!", message: "Importing settings requires a working internet connection.", preferredStyle: .Alert)
+            let okAction = UIAlertAction(title: "OK", style: .Default) { (action) in
+            }
+            alert.addAction(okAction)
+        }
+        else {
+            let alert = UIAlertController(title: nil, message: nil, preferredStyle: .Alert)
+            
+            for i in 1...count(settings)-1 {
+                let action = UIAlertAction(title: settings[i]["domain"]!, style: .Default) { (action) in
+                    self.importSettingsAtIndex(i)
+                }
+                alert.addAction(action)
+            }
+            
+            let cancelAction = UIAlertAction(title: "Cancel", style: .Cancel, handler: nil)
+            alert.addAction(cancelAction)
+            self.presentViewController(alert, animated: true, completion: nil)
+        }
     }
     
     // MARK: - UITextField Delegate
@@ -122,9 +178,30 @@ class SettingsViewController: UITableViewController, UITextFieldDelegate, NSXMLP
         else {
             textField.resignFirstResponder()
         }
-        return true
+        return false
     }
     
+    // MARK: - NSXMLParser Delegate
+    
+    func parser(parser: NSXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [NSObject : AnyObject]) {
+        
+        if elementName == "domain" {
+            setting = [String:String]()
+            setting["domain"] = attributeDict["category"] as? String
+        }
+    }
+    
+    func parser(parser: NSXMLParser, foundCharacters string: String?) {
+        elementString = string!
+    }
+    
+    func parser(parser: NSXMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
+        if elementName == "domain" {
+            settings.append(setting)
+        }
+        setting[elementName] = elementString
+    }
+
     // MARK: - Table view data source
     
     /*
@@ -193,12 +270,5 @@ class SettingsViewController: UITableViewController, UITextFieldDelegate, NSXMLP
         // Pass the selected object to the new view controller.
     }
     */
-    
-    // MARK: - NSXML Parse Delegate
-    func parser(parser: NSXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [NSObject : AnyObject]) {
-        println(elementName)
-        
-    }
-    
     
 }

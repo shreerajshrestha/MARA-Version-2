@@ -13,7 +13,7 @@ import AVKit
 import CoreData
 import MapKit
 
-class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDelegate, FDWaveformViewDelegate, FTPUploaderDelegate {
+class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDelegate, FDWaveformViewDelegate, FTPUploaderDelegate, PublisherDelegate, ALTextInputBarDelegate {
     
     @IBOutlet weak var progressView: UIProgressView!
     @IBOutlet weak var mapView: MKMapView!
@@ -33,11 +33,13 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
     
     internal var mediaType = String()
     internal var mediaObject: NSManagedObject?
+    internal var isPublishing: Bool = false
     
     private var audioPlayer: AVAudioPlayer?
     private var timer: NSTimer?
     private var webStatusTimer: NSTimer?
     private var fileURL: NSURL?
+    private var nextButton: UIButton!
     
     private var name = String()
     private var tags = String()
@@ -57,7 +59,7 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
     private var isEditing: Bool = false
     private var isUploading: Bool = false
     private var isDeleting: Bool = false
-    private var isPublishing: Bool = false
+    private var uploadRetries: Int = 4
     
     private var uploader = FTPUploader()
     private let textInputBar = ALTextInputBar()
@@ -78,14 +80,10 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
         super.viewDidLoad()
         
         let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true) as NSArray
-        let documentsDirectory = paths.objectAtIndex(0) as! NSString
+        let documentsDirectory = paths.objectAtIndex(0) as! String
         
         if mediaObject?.valueForKey("url") != nil {
-            webUrlExists = true
             webUrlString = mediaObject?.valueForKey("url") as! String
-        }
-        else {
-            webUrlExists = false
         }
         webURL = NSURL(string: webUrlString)!
         
@@ -192,15 +190,15 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardWillHide:", name: UIKeyboardWillHideNotification, object: nil)
         isEditing = false
         
-        progressView.setProgress(0.0, animated: false)
-        uploadButton.enabled = !fileExists(webURL) && internetAvailable()
-        publishButton.enabled = fileExists(webURL) && internetAvailable()
+        updateWebButtonStatus()
         
         if internetAvailable() {
             progressView.setProgress(1.0, animated: false)
         }
         
-        self.webStatusTimer = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "updateWebButtonStatus", userInfo: nil, repeats: true)
+        uploadRetries = 4
+        
+        self.webStatusTimer = NSTimer.scheduledTimerWithTimeInterval(0.25, target: self, selector: "updateWebButtonStatus", userInfo: nil, repeats: true)
     }
     
     override func viewWillLayoutSubviews() {
@@ -208,19 +206,9 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
         textInputBar.frame.size.width = view.bounds.size.width
     }
     
-    func updateWebButtonStatus() {
-        if !isUploading && !isEditing && !isDeleting && !isPublishing {
-            if internetAvailable() {
-                progressView.setProgress(1.0, animated: false)
-                uploadButton.enabled = !fileExists(webURL) && internetAvailable()
-                publishButton.enabled = fileExists(webURL) && internetAvailable()
-            }
-            else {
-                progressView.setProgress(0.0, animated: false)
-                uploadButton.enabled = false
-                publishButton.enabled = false
-            }
-        }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        var screenSize: CGSize = UIScreen.mainScreen().bounds.size as CGSize
     }
     
     func internetAvailable() -> Bool {
@@ -235,41 +223,106 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
     }
     
     func fileExists(url : NSURL!) -> Bool {
-        
-        let request = NSMutableURLRequest(URL: url)
-        request.HTTPMethod = "HEAD"
-        
-        var response : NSURLResponse?
-        NSURLConnection.sendSynchronousRequest(request, returningResponse: &response , error: nil)
-        
-        if let httpResponse = response as? NSHTTPURLResponse {
-            var fileSize : UInt64
-            var attr:NSDictionary? = NSFileManager.defaultManager().attributesOfItemAtPath(filePath, error: nil)
-            if let _attr = attr {
-                fileSize = _attr.fileSize();
+        if url.path != nil {
+            let request = NSMutableURLRequest(URL: url)
+            request.HTTPMethod = "HEAD"
+            
+            var response : NSURLResponse?
+            var error: NSError?
+            NSURLConnection.sendSynchronousRequest(request, returningResponse: &response , error: &error)
+            if let err = error {
+                println("NSURLConnection sendSynchronousRequest error: \(err.localizedDescription)")
             }
-            else {
-                fileSize = 0
+            
+            if let httpResponse = response as? NSHTTPURLResponse {
+                var fileSize : UInt64
+                var attr:NSDictionary? = NSFileManager.defaultManager().attributesOfItemAtPath(filePath, error: nil)
+                if let _attr = attr {
+                    fileSize = _attr.fileSize();
+                }
+                else {
+                    fileSize = 0
+                }
+                return Int64(fileSize) == httpResponse.expectedContentLength
             }
-            return Int64(fileSize) == httpResponse.expectedContentLength
         }
         return false
     }
     
+    
+    func updateWebButtonStatus() {
+        if !isUploading && !isEditing && !isDeleting && !isPublishing {
+            var isInternetAvailable = internetAvailable()
+            var isFileExists = fileExists(webURL)
+            
+            if isInternetAvailable {
+                progressView.setProgress(1.0, animated: false)
+            }
+            else {
+                progressView.setProgress(0.0, animated: false)
+            }
+            
+            uploadButton.enabled = !isFileExists && isInternetAvailable
+            publishButton.enabled = isFileExists && isInternetAvailable
+        }
+    }
+    
+    func typeButtonPressed(sender: UIButton!) {
+        switch inputType {
+            
+        case "tags":
+            tags = textInputBar.text
+            let tagsArray = tags.componentsSeparatedByString(",")
+            tagListView.removeAllTags()
+            for tag in tagsArray {
+                tagListView.addTag(tag)
+            }
+            textInputBar.textView.text = descriptor
+            inputType = "description"
+            UIView.animateWithDuration(1.5, delay:0.0, options: .CurveEaseInOut | .Autoreverse | .AllowUserInteraction | .Repeat, animations: {
+                self.nextButton.alpha = 0.1
+                }, completion: nil)
+            
+        case "description":
+            descriptor = textInputBar.text
+            descriptionTextView.selectable = true
+            descriptionTextView.text = descriptor
+            descriptionTextView.selectable = false
+            inputType = "complete"
+            
+        default:
+            name = textInputBar.text
+            titleLabel.text = name
+            textInputBar.textView.text = tags
+            inputType = "tags"
+        }
+        
+        if inputType == "complete" {
+            nextButton.layer.removeAllAnimations()
+            textInputBar.textView.userInteractionEnabled = false
+            textInputBar.textView.resignFirstResponder()
+            textInputBar.hidden = true
+            editButton.enabled = true
+        }
+    }
+    
     func configureInputBar() {
-        let rightButton = UIButton(frame: CGRectMake(0, 0, 44, 44))
-        rightButton.addTarget(self, action: "typeButtonPressed:", forControlEvents: UIControlEvents.TouchUpInside)
-        rightButton.setImage(UIImage(named: "textInput"), forState: UIControlState.Normal)
+        nextButton = UIButton(frame: CGRectMake(0, 0, 44, 44))
+        nextButton.addTarget(self, action: "typeButtonPressed:", forControlEvents: UIControlEvents.TouchUpInside)
+        nextButton.setImage(UIImage(named: "textInput"), forState: UIControlState.Normal)
+        
         keyboardObserver.userInteractionEnabled = false
         textInputBar.leftView = nil
-        textInputBar.rightView = rightButton
+        textInputBar.rightView = nextButton
         textInputBar.alwaysShowRightButton = true
         textInputBar.frame = CGRectMake(0, view.frame.size.height - textInputBar.defaultHeight, view.frame.size.width, textInputBar.defaultHeight)
         textInputBar.horizontalPadding = 10
         textInputBar.backgroundColor = UIColor.groupTableViewBackgroundColor()
         textInputBar.keyboardObserver = keyboardObserver
         textInputBar.textView.keyboardType = UIKeyboardType.ASCIICapable
-        textInputBar.textView.autocapitalizationType = UITextAutocapitalizationType.Sentences
+        textInputBar.textView.autocapitalizationType = UITextAutocapitalizationType.None
+        textInputBar.textView.returnKeyType = UIReturnKeyType.Default
+        textInputBar.delegate = self
     }
     
     func keyboardFrameChanged(notification: NSNotification) {
@@ -290,42 +343,6 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
         if let userInfo = notification.userInfo {
             let frame = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue()
             textInputBar.frame.origin.y = frame.origin.y
-        }
-    }
-    
-    func typeButtonPressed(sender:UIButton!) {
-        
-        switch inputType {
-            
-        case "tags":
-            tags = textInputBar.text
-            let tagsArray = tags.componentsSeparatedByString(",")
-            tagListView.removeAllTags()
-            for tag in tagsArray {
-                tagListView.addTag(tag)
-            }
-            textInputBar.textView.text = descriptor
-            inputType = "description"
-            
-        case "description":
-            descriptor = textInputBar.text
-            descriptionTextView.selectable = true
-            descriptionTextView.text = descriptor
-            descriptionTextView.selectable = false
-            inputType = "complete"
-            
-        default:
-            name = textInputBar.text
-            titleLabel.text = name
-            textInputBar.textView.text = tags
-            inputType = "tags"
-        }
-        
-        if inputType == "complete" {
-            textInputBar.textView.userInteractionEnabled = false
-            textInputBar.textView.resignFirstResponder()
-            textInputBar.hidden = true
-            editButton.enabled = true
         }
     }
     
@@ -464,22 +481,104 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
     }
     
     @IBAction func uploadButtonPressed(sender: UIBarButtonItem) {
-        
         let defaults = NSUserDefaults.standardUserDefaults()
-        uploader.FTPURL = defaults.objectForKey("ftpUrl") as! String
-        uploader.FTPUsername = defaults.objectForKey("ftpUsername") as! String
-        uploader.FTPPassword = defaults.objectForKey("ftpPassword") as! String
         
-        progressView.setProgress(0.0, animated: false)
-        cancelButton.enabled = false
-        editButton.enabled = false
-        deleteButton.enabled = false
-        uploadButton.enabled = false
+        if let ftpUrl = defaults.objectForKey("ftpUrl") as? String {
+            uploader.FTPURL = ftpUrl.isEmpty ? nil : ftpUrl
+        }
         
-        uploader.sourceFilePath = filePath
-        uploader.delegate = self
-        uploader.startUpload()
-        isUploading = true
+        if let ftpUsername = defaults.objectForKey("ftpUsername") as? String {
+            uploader.FTPUsername = ftpUsername.isEmpty ? nil : ftpUsername
+        }
+        
+        var error: NSError?
+        if let ftpPassword = SSKeychain.passwordForService("mara.ftp", account: defaults.objectForKey("ftpUsername") as? String, error: &error) {
+            uploader.FTPPassword = ftpPassword.isEmpty ? nil : ftpPassword
+        }
+        
+        var ftpDetailsSet = true
+        if uploader.FTPURL == nil || uploader.FTPUsername == nil || uploader.FTPPassword == nil {
+            ftpDetailsSet = false
+            let alert = UIAlertController(title: "FTP Details Not Set!", message: "To upload the file to the server, please enter or import the ftp details in the settings page.", preferredStyle: .Alert)
+            let cancelAction = UIAlertAction(title: "Cancel", style: .Default, handler: nil)
+            let settingsAction = UIAlertAction(title: "Open Settings", style: .Default) { (action) in
+                let settingsNC = self.storyboard?.instantiateViewControllerWithIdentifier("settingsNC") as! UIViewController
+                settingsNC.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
+                self.presentViewController(settingsNC, animated: true, completion: nil)
+            }
+            
+            alert.addAction(cancelAction)
+            alert.addAction(settingsAction)
+            self.presentViewController(alert, animated: true, completion: nil)
+        }
+        
+        if ftpDetailsSet {
+            isUploading = true
+            progressView.setProgress(0.0, animated: false)
+            
+            cancelButton.enabled = false
+            editButton.enabled = false
+            deleteButton.enabled = false
+            uploadButton.enabled = false
+            
+            uploader.sourceFilePath = filePath
+            uploader.delegate = self
+            uploader.startUpload()
+        }
+    }
+    
+    @IBAction func publishButtonPressed(sender: UIBarButtonItem) {
+        let defaults = NSUserDefaults.standardUserDefaults()
+        if let blogUrl = defaults.objectForKey("blogUrl") as? String {
+            if blogUrl.isEmpty {
+                let alert = UIAlertController(title: "Blog URL Not Set!", message: "To publish post, please enter the blog user in the settings page.", preferredStyle: .Alert)
+                let cancelAction = UIAlertAction(title: "Cancel", style: .Default, handler: nil)
+                let settingsAction = UIAlertAction(title: "Open Settings", style: .Default) { (action) in
+                    let settingsNC = self.storyboard?.instantiateViewControllerWithIdentifier("settingsNC") as! UIViewController
+                    settingsNC.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
+                    self.presentViewController(settingsNC, animated: true, completion: nil)
+                }
+                
+                alert.addAction(cancelAction)
+                alert.addAction(settingsAction)
+                self.presentViewController(alert, animated: true, completion: nil)
+            }
+            else {
+                isPublishing = true
+                let publishNC = self.storyboard?.instantiateViewControllerWithIdentifier("publishNC") as! UINavigationController
+                publishNC.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
+                
+                let publishVC = publishNC.viewControllers[0] as! PublishViewController
+                publishVC.delegate = self
+                publishVC.blogUrl = defaults.objectForKey("blogUrl") as! String
+                publishVC.mediaType = mediaType
+                publishVC.name = name
+                publishVC.tags = tags
+                publishVC.descriptor = descriptor
+                publishVC.date = date
+                publishVC.webUrlString = webUrlString
+                publishVC.latitude = latitude
+                publishVC.longitude = longitude
+                
+                self.presentViewController(publishNC, animated: true, completion: nil)
+            }
+        }
+    }
+    
+    // MARK: - ALTextView Delegate
+    func textViewShouldReturn(textView: ALTextView) -> Bool {
+        if inputType == "description" {
+            return true
+        }
+        if count(textView.text) == 0 {
+            let alert = UIAlertController(title: "Text Field Empty!", message: "Please type in some text to proceed.", preferredStyle: UIAlertControllerStyle.Alert)
+            let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil)
+            alert.addAction(okAction)
+            self.presentViewController(alert, animated: true, completion: nil)
+            return false
+        }
+        typeButtonPressed(UIButton())
+        return false
     }
     
     // MARK: - FDWaveformViewDelegate
@@ -527,18 +626,18 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
     func uploadedSuccessfullyToURL(URL: NSURL!) {
         let defaults = NSUserDefaults.standardUserDefaults()
         var useHttpMask = defaults.boolForKey("useHttpMask")
-        var urlString = String()
         if useHttpMask {
-            urlString = defaults.objectForKey("httpMask") as! String
-            urlString = cleanHttpAddress(urlString)
-            urlString = urlString + URL.lastPathComponent!
+            webUrlString = defaults.objectForKey("httpMask") as! String
+            webUrlString = cleanHttpAddress(webUrlString)
+            webUrlString = webUrlString + URL.lastPathComponent!
         }
         else {
-            urlString = URL.absoluteString!
-            urlString = cleanHttpAddress(urlString)
+            webUrlString = URL.absoluteString!
+            webUrlString = cleanHttpAddress(webUrlString)
         }
-        webURL = NSURL(string: urlString)!
-        mediaObject?.setValue(urlString, forKey:"url")
+        
+        webURL = NSURL(string: webUrlString)!
+        mediaObject?.setValue(webUrlString, forKey:"url")
         var error: NSError?
         self.managedObjectContext?.save(&error)
         if let err = error {
@@ -552,12 +651,36 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
     }
     
     func uploadDidFailWithError(error: String!) {
-        println(error)
-        progressView.setProgress(0.0, animated: false)
-        cancelButton.enabled = true
-        editButton.enabled = true
-        deleteButton.enabled = true
-        isUploading = false
-        updateWebButtonStatus()
+        if self.uploadRetries == 0 {
+            let alert = UIAlertController(title: "Network Stream Open Error!", message: "Uploading the file requires a working ftp connection, please verify and fill completely the ftp details in the settings page.", preferredStyle: .Alert)
+            let okAction = UIAlertAction(title: "OK", style: .Default, handler: nil)
+            let settingsAction = UIAlertAction(title: "Open Settings", style: .Default) { (action) in
+                let settingsNC = self.storyboard?.instantiateViewControllerWithIdentifier("settingsNC") as! UIViewController
+                settingsNC.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
+                self.presentViewController(settingsNC, animated: true, completion: nil)
+            }
+            
+            alert.addAction(okAction)
+            alert.addAction(settingsAction)
+            self.presentViewController(alert, animated: true, completion: nil)
+            
+            progressView.setProgress(0.0, animated: false)
+            cancelButton.enabled = true
+            editButton.enabled = true
+            deleteButton.enabled = true
+            isUploading = false
+            updateWebButtonStatus()
+            uploadRetries = 4
+        }
+        else {
+            uploader.startUpload()
+            self.uploadRetries -= 1
+            println("\(error), Retrying... retries left = \(uploadRetries)")
+        }
+    }
+    
+    // MARK: PublisherDelegate
+    func updatePublishStatus(isPublishing: Bool) {
+        self.isPublishing = isPublishing
     }
 }

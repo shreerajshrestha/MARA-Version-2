@@ -58,13 +58,13 @@ class ImageTableViewController: UITableViewController, NSFetchedResultsControlle
     }
 
     @IBAction func helpButtonClicked(sender: UIButton) {
-        let supportNC = self.storyboard?.instantiateViewControllerWithIdentifier("supportNC") as! UIViewController
+        let supportNC = self.storyboard?.instantiateViewControllerWithIdentifier("supportNC") as! UINavigationController
         supportNC.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
         self.presentViewController(supportNC, animated: true, completion: nil)
     }
     
     @IBAction func settingsButtonClicked(sender: UIBarButtonItem) {
-        let settingsNC = self.storyboard?.instantiateViewControllerWithIdentifier("settingsNC") as! UIViewController
+        let settingsNC = self.storyboard?.instantiateViewControllerWithIdentifier("settingsNC") as! UINavigationController
         settingsNC.modalTransitionStyle = UIModalTransitionStyle.CrossDissolve
         self.presentViewController(settingsNC, animated: true, completion: nil)
     }

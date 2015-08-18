@@ -21,6 +21,7 @@ class RecorderViewController: UIViewController, AVAudioPlayerDelegate, AVAudioRe
     @IBOutlet weak var retakeButton: UIBarButtonItem!
     @IBOutlet weak var waveformLeft: NSLayoutConstraint!
     @IBOutlet weak var waveformRight: NSLayoutConstraint!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     internal var delegate: RecorderDelegate?
     internal var filePath = NSString()
@@ -38,6 +39,7 @@ class RecorderViewController: UIViewController, AVAudioPlayerDelegate, AVAudioRe
         state = "record"
         useAudioButton.enabled = false
         retakeButton.enabled = false
+        activityIndicator.hidden = true
         recordStopPlayPauseButton.setImage(UIImage(named: "record"), forState: UIControlState.Normal)
         fileURL = NSURL(fileURLWithPath: filePath as String)!
     }
@@ -111,6 +113,8 @@ class RecorderViewController: UIViewController, AVAudioPlayerDelegate, AVAudioRe
         switch state {
             
         case "record":
+            activityIndicator.hidden = false
+            activityIndicator.startAnimating()
             recordStopPlayPauseButton.setImage(UIImage(named: "stop"), forState: UIControlState.Normal)
             var audioSession = AVAudioSession.sharedInstance()
             audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, error: nil)
@@ -135,6 +139,8 @@ class RecorderViewController: UIViewController, AVAudioPlayerDelegate, AVAudioRe
             }
                 
         case "recording":
+            activityIndicator.stopAnimating()
+            activityIndicator.hidden = true
             useAudioButton.enabled = true
             retakeButton.enabled = true
             recordStopPlayPauseButton.setImage(UIImage(named: "play"), forState: UIControlState.Normal)

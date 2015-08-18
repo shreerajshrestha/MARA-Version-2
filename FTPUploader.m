@@ -163,12 +163,12 @@ enum {
                 bytesRead = [fileStream read:_buffer maxLength:kSendBufferSize];
                 if (bytesRead == -1) {
                     _bytesTransferred = 0;
-                    [self.delegate uploadDidFailWithError:@"Source File Open Error!"];
                     [self stopUpload];
+                    [self.delegate uploadDidFailWithError:@"Source File Open Error!"];
                 } else if (bytesRead == 0) {
                     _bytesTransferred = 0;
-                    [self.delegate uploadedSuccessfullyToURL:_ftpURL];
                     [self stopUpload];
+                    [self.delegate uploadedSuccessfullyToURL:_ftpURL];
                 } else {
                     _bufferOffset = 0;
                     _bufferLimit  = bytesRead;
@@ -181,8 +181,8 @@ enum {
                 assert(bytesWritten != 0);
                 if (bytesWritten == -1) {
                     _bytesTransferred = 0;
-                    [self.delegate uploadDidFailWithError:@"FTP Server Write Error!"];
                     [self stopUpload];
+                    [self.delegate uploadDidFailWithError:@"FTP Server Write Error!"];
                 } else {
                     _bufferOffset += bytesWritten;
                     _bytesTransferred += bytesWritten;
@@ -191,8 +191,8 @@ enum {
         } break;
             
         case NSStreamEventErrorOccurred: {
-            [self.delegate uploadDidFailWithError:@"Network Stream Open Error!"];
             [self stopUpload];
+            [self.delegate uploadDidFailWithError:@"Network Stream Open Error!"];
         } break;
             
         case NSStreamEventEndEncountered: {
