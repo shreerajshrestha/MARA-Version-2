@@ -646,6 +646,8 @@ Please press the center button on the top bar to capture media first. Then, ente
                     </navigationItem>
                     <connections>
                         <outlet property="captureButton" destination="kPh-Z3-xfN" id="4tg-dL-9PB"/>
+                        <outlet property="containerViewWidth" destination="cGo-Tt-2bD" id="Kq2-xH-eIC"/>
+                        <outlet property="contentViewHeight" destination="gGZ-9q-0F6" id="oPm-fL-Obb"/>
                         <outlet property="descriptionTextView" destination="ux8-jC-8rT" id="dQf-e7-MY9"/>
                         <outlet property="imagePreview" destination="7F5-AC-pge" id="Jlv-yT-P5b"/>
                         <outlet property="mapView" destination="Uzw-Hx-7yD" id="cpp-6A-lxe"/>
@@ -935,6 +937,8 @@ Please press the center button on the top bar to capture media first. Then, ente
                     </navigationItem>
                     <connections>
                         <outlet property="cancelButton" destination="1uT-mO-MYr" id="akr-1S-Kw6"/>
+                        <outlet property="containerViewWidth" destination="dBQ-ob-wtk" id="4Cd-ta-zHs"/>
+                        <outlet property="contentViewHeight" destination="RNS-D8-ipE" id="eXF-aV-GdH"/>
                         <outlet property="dateLabel" destination="Je4-SG-hkz" id="vVL-5I-78S"/>
                         <outlet property="deleteButton" destination="fwH-p8-u4t" id="fGY-vO-rnG"/>
                         <outlet property="descriptionTextView" destination="hng-vi-NJw" id="3h4-yM-NT5"/>

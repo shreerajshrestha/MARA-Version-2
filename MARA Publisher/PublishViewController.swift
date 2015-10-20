@@ -130,8 +130,8 @@ class PublishViewController: UIViewController, WKNavigationDelegate {
         publishButton.enabled = false
         UIApplication.sharedApplication().beginIgnoringInteractionEvents()
         
-        var postFormat = String()
-        var body = String()
+        var postFormat: String = ""
+        var body: String = ""
         
         switch mediaType {
         case "image":
@@ -148,9 +148,9 @@ class PublishViewController: UIViewController, WKNavigationDelegate {
             body = ""
         }
         
-        body += "<p><br>\(descriptor)</p>"
-        body += "<p>&nbsp;</p>[wp_gmaps lat=\"\(latitude)\" lng=\"\(longitude)\" zoom=\"12\" marker=\"1\"]"
-        body += "<code>\(date)</code>"
+        body = body + "<p><br>\(descriptor)</p>"
+        body = body + "<p>&nbsp;</p>[wp_gmaps lat=\"\(latitude)\" lng=\"\(longitude)\" zoom=\"12\" marker=\"1\"]"
+        body = body + "<code>\(date)</code>"
         
         var clearTitlePlaceholder = "document.getElementById('title-prompt-text').className='screen-reader-text';"
         var setTitle = "document.getElementById('title').value='\(name)';"

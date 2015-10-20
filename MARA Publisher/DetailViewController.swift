@@ -31,6 +31,9 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
     @IBOutlet weak var publishButton: UIBarButtonItem!
     @IBOutlet weak var cancelButton: UIBarButtonItem!
     
+    @IBOutlet weak var contentViewHeight: NSLayoutConstraint!
+    @IBOutlet weak var containerViewWidth: NSLayoutConstraint!
+    
     internal var mediaType = String()
     internal var mediaObject: NSManagedObject?
     internal var isPublishing: Bool = false
@@ -76,8 +79,42 @@ class DetailViewController: UIViewController, AVAudioPlayerDelegate, MKMapViewDe
         return true
     }
     
+    func setDisplayConstraints() {
+        var screenSize: CGSize = UIScreen.mainScreen().bounds.size as CGSize
+        var height: CGFloat = screenSize.height
+        var width: CGFloat = screenSize.width
+        
+        if height < width {
+            var temp = height
+            height = width
+            width = temp
+        }
+        
+        // iPhone 5s/5, 4s
+        if (height == 568.0 || height == 480.0) && width == 320.0 {
+            containerViewWidth.constant = width
+            contentViewHeight.constant = 750.0
+        }
+            // iPhone 6
+        else if height == 667.0 && width == 375.0 {
+            containerViewWidth.constant = width
+            contentViewHeight.constant = 834.0
+        }
+            // iPhone 6 Plus
+        else if height == 736.0 && width == 414.0 {
+            containerViewWidth.constant = width
+            contentViewHeight.constant = 890.0
+        }
+            // iPad
+        else if height == 1024.0 && width == 768.0 {
+            contentViewHeight.constant = height - 65.0
+            containerViewWidth.constant = 458.0
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        setDisplayConstraints()
         
         let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true) as NSArray
         let documentsDirectory = paths.objectAtIndex(0) as! String
